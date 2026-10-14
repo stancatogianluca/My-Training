@@ -45,7 +45,7 @@ function validBackup(v){return v&&v.version===1&&Array.isArray(v.workouts)&&Arra
 
 function v2OverviewHTML(){const rides=weekData().filter(w=>['gravel','mtb','enduro','rullo'].includes(w.type)),climb=rides.reduce((n,w)=>n+(Number(w.elevation)||0),0),plans=readPlans(),start=currentWeek().toISOString().slice(0,10),upcoming=plans.filter(p=>p.date>=start).sort((a,b)=>a.date.localeCompare(b.date)).slice(0,3);return `<section class="card v2Overview"><div class="sectionTitle"><h2>🚴 Il tuo percorso</h2><span class="pill">Novità</span></div><div class="grid two"><div class="metric"><small>Dislivello settimana</small><strong>${Math.round(climb)} m</strong></div><div class="metric"><small>Prossimi allenamenti</small><strong>${upcoming.length}</strong></div></div><h3>In programma</h3>${upcoming.map(p=>`<div class="row"><span>${fmt(p.date)} · ${escapeHTML((allTypes[p.type]||['','Attività'])[1])}</span><small>${escapeHTML(p.notes||'')}</small></div>`).join('')||'<p class="muted">Nessun allenamento pianificato.</p>'}<button class="secondary" data-go="trainingPlanner">Gestisci il piano →</button></section>`}
 function home(){
- const state=gravelPlanState(),start=state.start||gravelPlanDate(today(),-((new Date().getDay()+6)%7));
+ const state=gravelPlanState();if(!state.start){state.start=gravelPlanDate(today(),-((new Date().getDay()+6)%7));gravelPlanSave(state)}const start=state.start;
  const daysSince=Math.floor((new Date(today()+'T12:00:00')-new Date(start+'T12:00:00'))/86400000);
  const week=Math.max(0,Math.min(3,Math.floor(daysSince/7))),phase=gravelPlanWeeks[week],day=(new Date().getDay()+6)%7;
  const dates=gravelPlanDays.map((_,i)=>gravelPlanDate(start,week*7+i));
