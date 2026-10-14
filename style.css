@@ -213,3 +213,57 @@ details summary{cursor:pointer;font-size:12px;font-weight:700;color:#a9d7ff}
 .achievement strong{font-size:11px;color:#9cd7e8;white-space:nowrap}
 button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #6ed5ff;outline-offset:3px}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+
+
+/* My Training 1.8 — Dark Sport visual system. Presentation only; no data or sync changes. */
+:root{--bg:#070d17;--surface:#111f31;--surface2:#182b42;--line:#29445e;--accent:#38b6ff;--text:#f5faff;--sub:#a8c0d9;color-scheme:dark}
+html{background:#070d17}
+body{background:radial-gradient(ellipse 85% 550px at 50% -160px,#153c65 0%,#070d17 100%);color:var(--text)}
+.app{background:radial-gradient(ellipse 130% 390px at 50% -120px,#164f78 0%,#0b1b2e 48%,#070d17 100%);min-height:100dvh}
+header{padding-top:24px;padding-bottom:24px}
+header h1{font-size:29px;letter-spacing:-1.25px;text-shadow:0 2px 18px #4bb9ff18}
+header h1 span{filter:drop-shadow(0 0 7px #4dc8ff)}
+header p{color:#adc6df}
+.iconbtn{background:#1b3149;border:1px solid #375b7b;border-radius:15px;min-width:45px;min-height:45px;box-shadow:0 6px 24px #0004}
+.card,.premiumPanel,.guidedCard{background:linear-gradient(145deg,#172c42 0%,#101d2e 74%);border:1px solid #2a4560;border-radius:21px;box-shadow:0 10px 30px #00000035}
+.card:has(.sectionTitle){position:relative}
+.premiumHero{position:relative;overflow:hidden;background:radial-gradient(circle at 105% -15%,#277fc1 0%,#154d7b 34%,#0c2542 76%);border:1px solid #3c87bb;border-radius:26px;box-shadow:0 18px 42px #0006, inset 0 1px #ffffff24}
+.premiumHero::after{content:"";position:absolute;width:165px;height:165px;right:-82px;bottom:-105px;border:28px solid #65cfff18;border-radius:50%;pointer-events:none}
+.premiumHero h2{font-size:29px;line-height:1.12;letter-spacing:-1.1px}
+.premiumEyebrow,.eyebrow{color:#88d7ff}
+.liveDot{background:#59efb2;box-shadow:0 0 0 4px #59efb226,0 0 13px #59efb270}
+.premiumMetric,.metric{background:linear-gradient(155deg,#1b3550,#112237);border:1px solid #30516d;border-radius:18px;box-shadow:inset 0 1px #ffffff08}
+.premiumMetric strong,.metric strong{color:#f7fbff;font-variant-numeric:tabular-nums}
+.premiumMetric .metricIcon{filter:drop-shadow(0 3px 8px #40b9ff33)}
+.sectionTitle h2{font-size:18px;letter-spacing:-.45px}
+.pill{background:#194466;color:#a4e3ff;border:1px solid #36769c}
+.primary{background:linear-gradient(115deg,#087bd6,#28a8f4 62%,#53c7ff);border:1px solid #5bc6ff55;border-radius:15px;color:#fff;box-shadow:0 8px 24px #0d89e84d;min-height:46px}
+.secondary{background:linear-gradient(155deg,#213a53,#172c42);border:1px solid #3a5d7b;border-radius:14px;color:#e5f4ff;min-height:42px}
+.tabs button{background:#182e45;border-color:#335571;border-radius:13px}
+.tabs button.selected{background:linear-gradient(115deg,#167bd3,#3cb8fa);border-color:#55bfff;box-shadow:0 5px 14px #138aff33}
+.quickTile,.activityTile,.planTile{background:linear-gradient(145deg,#1b344d,#102135);border:1px solid #31516e;border-radius:19px;box-shadow:0 8px 23px #0003}
+.quickTile{min-height:125px}
+.quickTile span{filter:drop-shadow(0 3px 9px #4bc4ff35)}
+.quickTile strong{font-size:14px}
+.activityIcon,.planIcon{box-shadow:inset 0 1px #ffffff25,0 5px 15px #0003}
+.activityTile:active,.planTile:active,.quickTile:active{border-color:#59bdff}
+.progress{background:#243c55;height:11px}
+.progress>div,.premiumProgress>div{background:linear-gradient(90deg,#147fe0,#43c4ff 72%,#55e2c0);box-shadow:0 0 14px #30b8ff44}
+.weekTrack,.cyclingBarTrack{background:#0c1b2d;border:1px solid #213b55}
+.weekFill.filled,.cyclingBarTrack>div{background:linear-gradient(180deg,#79d9ff,#2f9bea 55%,#1862b6)}
+.day{background:#162a40;border:1px solid #29435b;border-radius:12px;color:#d9eafb}
+.day.done{border-color:#39b8ff;box-shadow:inset 0 0 0 1px #39b8ff44}
+.day.today{background:#1a5984;border-color:#65caff;color:#fff}
+.day.planned{border-style:dashed;border-color:#62c0ff88}
+input,select,textarea{background:#0f2135;border:1px solid #3a5a78;color:#f5faff;border-radius:13px}
+input:focus,select:focus,textarea:focus{outline:2px solid #55c7ff;outline-offset:1px}
+nav{width:min(540px,calc(100% - 20px));bottom:calc(8px + env(safe-area-inset-bottom));border-radius:22px;padding:9px 6px;background:#12263bea;border:1px solid #355776;box-shadow:0 10px 40px #0009,0 0 25px #125f9b26;backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px)}
+nav button{border-radius:13px;min-height:48px;min-width:0;flex:1;color:#a0bbd5}
+nav button.active{background:#22415e;color:#85d8ff}
+nav button.add{background:linear-gradient(130deg,#087bd9,#3ebeff);box-shadow:0 4px 17px #269dff5c;color:#fff;max-width:76px}
+nav small{font-size:10px}
+button{transition:background-color .18s ease,border-color .18s ease,box-shadow .18s ease,transform .14s ease}
+button:focus-visible{outline:2px solid #8ce3ff;outline-offset:3px}
+@media(min-width:650px){.app{border-left:1px solid #27415a;border-right:1px solid #27415a;box-shadow:0 0 70px #0008}}
+@media(max-width:370px){nav{width:calc(100% - 12px);padding:7px 2px}nav button{font-size:19px}nav small{font-size:9px}.premiumHero h2{font-size:25px}.premiumMetric{min-height:125px}}
+@media(prefers-reduced-motion:reduce){button{transition:none}}
