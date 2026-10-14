@@ -107,3 +107,42 @@ nav small{font-size:10px;font-weight:600;letter-spacing:-.1px}
 details{background:#13283b;border:1px solid #2d4a65;border-radius:12px;padding:10px 12px;margin:9px 0}
 details summary{cursor:pointer;font-size:12px;font-weight:700;color:#a9d7ff}
 @media(max-width:370px){.activityTile,.planTile{gap:10px;padding:11px}.activityIcon,.planIcon{width:48px;height:48px}.strengthBanner strong{font-size:16px}}
+
+/* Guided Workout Pro */
+.guidedHead{display:flex;justify-content:space-between;align-items:center;gap:7px;margin:3px 0 16px;color:#9cb8d4;font-size:10px;font-weight:800;letter-spacing:.5px}
+.guidedHead .secondary{font-size:12px;padding:9px 10px}
+.guidedCard{border:1px solid #2d4862;background:linear-gradient(150deg,#182b40,#101c2b);border-radius:23px;padding:19px 16px;box-shadow:0 12px 30px #0003;margin-bottom:14px}
+.guidedTitle{display:flex;gap:12px;align-items:center}
+.guidedIcon{width:50px;height:50px;display:grid;place-items:center;background:linear-gradient(135deg,#185f9e,#354f99);border-radius:15px;font-size:25px;flex-shrink:0}
+.guidedTitle h2{font-size:20px;margin:0 0 5px;line-height:1.18}
+.guidedTitle p{font-size:11px;color:#9db6ce;margin:0}
+.guidedSegments{display:flex;gap:5px;margin:22px 0 18px}
+.guidedSegments span{height:7px;flex:1;background:#31465c;border-radius:9px}
+.guidedSegments span.done{background:#35c68b}
+.guidedSegments span.active{background:#409fff}
+.guidedStat{display:flex;align-items:center;justify-content:space-between;margin:12px 0}
+.guidedStat span{font-size:11px;letter-spacing:.7px;color:#a8c0d8;font-weight:800}
+.guidedStat strong{font-size:24px;color:#f4f9ff}
+.guidedStat small{font-size:14px;color:#8fa7bf}
+.guidedSetDots{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+.guidedSetDots span{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;border:1px solid #36536f;background:#172a3e;color:#b5cbe0;font-weight:800;font-size:12px}
+.guidedSetDots span.complete{background:#137e5a;border-color:#2cc48a;color:#fff}
+.guidedSetDots span.now{background:#2079cb;border-color:#5cb4ff;color:#fff}
+.guidedRep{text-align:center;border:1px solid #28445f;background:#0e1e2e;border-radius:18px;padding:18px 10px;margin-bottom:16px}
+.guidedRep p{font-size:12px;color:#a4b9ce;margin:0 0 10px}
+.guidedCounter{display:flex;align-items:center;justify-content:center;gap:28px}
+.guidedCounter strong{font-size:53px;line-height:1;font-weight:850;font-variant-numeric:tabular-nums;min-width:75px}
+.guidedCounter button{width:49px;height:49px;border-radius:15px;border:1px solid #3c6080;background:#1c3954;color:white;font-size:29px}
+.guidedCounter button:disabled{opacity:.35}
+.guidedMeta{display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;font-size:11px;color:#9dbbd5;margin:13px 0}
+.guidedAction{min-height:54px;font-size:15px;margin-top:14px;background:linear-gradient(100deg,#21b879,#37cb87);color:#071b13}
+.guidedUndo{width:100%;margin-top:10px}
+.guidedRest{border-color:#305274}
+.guidedRest .row>select{max-width:160px}
+.guidedRest .row>label{margin:0}
+.guidedRest .row>strong:last-child{font-variant-numeric:tabular-nums;font-size:24px;color:#69baff}
+.guidedFooter{margin:14px 0}
+.guidedFooter button{flex:1}
+.guidedSummaryItem{border-top:1px solid #2b4157;padding:12px 0;display:flex;flex-direction:column;gap:4px}
+.guidedSummaryItem small{color:#a7c3df}
+@media(max-width:370px){.guidedHead{font-size:9px}.guidedCounter{gap:18px}.guidedCard{padding:15px 12px}}
