@@ -360,3 +360,22 @@ nav button small{font-size:10px}
 .mtManageRow .mtSkip input{width:16px;height:16px}
 .mtSafety{background:#493b24;border:1px solid #aa8042;border-radius:14px;padding:14px;color:#ffe1aa;font-size:12px;line-height:1.5;margin:0 0 14px}
 @media(max-width:370px){.mtTrendRow{grid-template-columns:58px minmax(0,1fr) 75px}.mtManageRow{grid-template-columns:minmax(0,1fr) 120px}}
+
+
+/* Performance Edition 3.2 */
+.mtReportGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:16px}
+.mtReportMetric{display:flex;flex-direction:column;gap:8px;background:#102d43;border:1px solid #31536c;border-radius:17px;padding:15px;min-width:0}
+.mtReportMetric small{font-size:11px;color:#9ebbd0}
+.mtReportMetric strong{font-size:25px;color:#f4faff;letter-spacing:-.6px}
+.mtReportMetric span{font-size:10px;color:#83d4eb}
+.mtVariant{background:#173a4f;border-left:3px solid #5ac5e4;padding:10px 12px;border-radius:6px;color:#d7eaf7;font-size:12px;line-height:1.55}
+.mtFocusToggle{font-size:11px!important;padding:8px!important;white-space:nowrap}
+body.mtImmersive{background:#071420;overflow-x:hidden}
+body.mtImmersive .app{max-width:100%;padding-bottom:0}
+body.mtImmersive header,body.mtImmersive nav,body.mtImmersive footer{display:none!important}
+body.mtImmersive #main{max-width:620px;margin:0 auto;padding:calc(env(safe-area-inset-top,0px) + 12px) 12px calc(env(safe-area-inset-bottom,0px) + 30px)}
+body.mtImmersive .guidedHead{position:sticky;top:0;z-index:15;background:#071420;padding:10px 4px;border-bottom:1px solid #2c506a;display:flex;flex-wrap:wrap;gap:8px}
+body.mtImmersive .guidedCard{box-shadow:none;border-color:#3981a4}
+body.mtImmersive .guidedAction{min-height:58px;font-size:17px}
+body.mtImmersive .guidedCounter button{min-width:58px;min-height:58px}
+@media(max-width:360px){.mtReportMetric{padding:12px}.mtReportMetric strong{font-size:21px}.mtFocusToggle{font-size:10px!important}}
