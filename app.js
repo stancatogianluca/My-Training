@@ -13,7 +13,7 @@ const duration=m=>`${Math.floor(m/60)}h ${String(m%60).padStart(2,'0')}m`;
 const currentWeek=()=>{let d=new Date(),day=(d.getDay()+6)%7;d.setHours(12,0,0,0);d.setDate(d.getDate()-day);return d};
 const weekData=()=>{let start=currentWeek();return data.workouts.filter(w=>new Date(w.date+'T12:00:00')>=start)};
 const sorted=()=>[...data.workouts].sort((a,b)=>b.date.localeCompare(a.date));
-function navigate(v){if(view==='routine'&&v!=='routine')stopStrengthTimer();view=v;editing=null;document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===v));render();window.scrollTo(0,0)}
+function navigate(v){if(view==='routine'&&v!=='routine')stopStrengthTimer();if(view==='guidedWorkout'&&v!=='guidedWorkout')stopGuidedTimer();view=v;editing=null;document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===v));render();window.scrollTo(0,0)}
 function item(w){let t=allTypes[w.type]||['🏃','Altro'];return `<div class="item"><div class="symbol">${t[0]}</div><div><strong>${escapeHTML(t[1])}</strong><p>${w.distance?Number(w.distance).toLocaleString('it-IT')+' km · ':''}${duration(w.minutes)} · ${fmt(w.date)}</p></div><div class="right"><button class="secondary" data-edit="${escapeHTML(w.id)}" aria-label="Modifica allenamento">Apri ›</button></div></div>`}
 function home(){
  const w=weekData(),all=sorted(),km=w.reduce((n,x)=>n+(Number(x.distance)||0),0),minutes=w.reduce((n,x)=>n+(Number(x.minutes)||0),0),strength=w.filter(x=>x.type==='forza').length,start=currentWeek();
@@ -61,6 +61,71 @@ function fmtClock(n){n=Math.max(0,Math.ceil(n));return String(Math.floor(n/60)).
 
 function train(){main.innerHTML=`<div class="pageHeading"><span class="eyebrow">SCEGLI LA TUA ATTIVITÀ</span><h2>Allenati</h2><p>Registra un'uscita o apri la tua scheda Full Body.</p></div><div class="activityList">${Object.entries(types).map(([id,t])=>`<button class="activityTile activity-${id}" data-training="${id}"><span class="activityIcon">${t[0]}</span><span class="activityCopy"><strong>${escapeHTML(t[1])}</strong><small>${id==='forza'?'Schede A/B · 30 minuti':'Registra la tua attività'}</small></span><span class="activityArrow">›</span></button>`).join('')}</div>`}
 function chooseStrength(){main.innerHTML=`<div class="pageHeading"><span class="eyebrow">FORZA E IPERTROFIA</span><h2>Corpo Libero</h2><p>Due sedute Full Body da massimo 30 minuti.</p></div><div class="strengthBanner"><span>🏋️</span><strong>Due sedute a settimana.<br>Un corpo più forte.</strong></div><div class="planList">${strengthPlans.map((p,i)=>`<button class="planTile" data-strength="${i}"><span class="planIcon">${i?'⚡':'🏋️'}</span><span><strong>${p.name}</strong><small>${escapeHTML(p.focus)}</small><small>◷ 30 minuti · 5 esercizi</small></span><span class="activityArrow">›</span></button>`).join('')}</div><div class="quickGrid"><button class="quickTile" data-go="strengthProgress"><span>📈</span><strong>I miei progressi</strong><small>Grafici e storico</small></button><button class="quickTile" data-go="train"><span>↩</span><strong>Altre attività</strong><small>Torna agli sport</small></button></div>`}
+
+let guidedInterval=null;
+function stopGuidedTimer(){if(guidedInterval){clearInterval(guidedInterval);guidedInterval=null}}
+function guidedWorkout(){
+ stopStrengthTimer();stopGuidedTimer();
+ const plan=strengthPlans[strengthSelected],blocks=plan.blocks.slice(1),key='my-training-guided-draft-v1';
+ let draft=null;try{draft=JSON.parse(localStorage.getItem(key)||'null')}catch{}
+ if(!draft||draft.plan!==strengthSelected||!Array.isArray(draft.exercises)||draft.exercises.length!==blocks.length){
+  draft={plan:strengthSelected,step:0,minutes:30,rest:60,exercises:blocks.map(b=>{const last=strengthHistory(b[0])[0]?.strengthDetails.find(x=>x.name===b[0]);return {name:b[0],band:last?.band||'Nessuno',reps:[],target:Math.max(1,Math.min(10,last?.reps?.length||b[1])),nextReps:last?.reps?.[0]||8}})};
+ }
+ let restUntil=0,restRemaining=0,restPaused=false;
+ const persist=()=>{try{localStorage.setItem(key,JSON.stringify(draft))}catch{}};
+ const current=()=>draft.exercises[draft.step];
+ const bands=['Nessuno','Giallo','Rosso','Nero','Viola','Verde','Blu','Altro'];
+ const escapeAttr=v=>escapeHTML(String(v));
+ function show(){
+  stopGuidedTimer();
+  const ex=current(),block=blocks[draft.step],done=ex.reps.length,complete=done>=ex.target,previous=strengthHistory(ex.name)[0],last=previous?.strengthDetails.find(x=>x.name===ex.name);
+  main.innerHTML=`<div class="guidedHead"><button class="secondary" id="guidedBack">← Schede</button><span>FULL BODY ${strengthSelected?'B':'A'}</span><span>ESERCIZIO ${draft.step+1} / ${blocks.length}</span></div>
+  <div class="guidedCard"><div class="guidedTitle"><span class="guidedIcon">🏋️</span><div><h2>${escapeHTML(ex.name)}</h2><p>${escapeHTML(exerciseHelp[ex.name]||'Esegui il movimento in modo controllato.')}</p></div></div>
+  <div class="guidedSegments">${blocks.map((_,i)=>`<span class="${i<draft.step?'done':i===draft.step?'active':''}"></span>`).join('')}</div>
+  <div class="guidedStat"><span>SERIE COMPLETATE</span><strong>${done} <small>/ ${ex.target}</small></strong></div>
+  <div class="guidedSetDots">${Array.from({length:ex.target},(_,i)=>`<span class="${i<done?'complete':i===done?'now':''}">${i<done?'✓':i+1}</span>`).join('')}</div>
+  <div class="guidedRep"><p>${complete?'Esercizio completato':'Ripetizioni · serie '+(done+1)}</p><div class="guidedCounter"><button type="button" id="guidedMinus" ${complete?'disabled':''}>−</button><strong id="guidedRepValue">${Number(ex.nextReps)||0}</strong><button type="button" id="guidedPlus" ${complete?'disabled':''}>+</button></div></div>
+  <label for="guidedBand">Elastico utilizzato</label><select id="guidedBand">${bands.map(b=>`<option ${ex.band===b?'selected':''}>${b}</option>`).join('')}</select>
+  <div class="guidedMeta"><span>Obiettivo: ${escapeHTML(block[2])}</span><span>${last?'Ultima: '+last.reps.join(' / ')+' rip.':'Prima registrazione'}</span></div>
+  <details><summary>ℹ️ Tecnica e progressione</summary><p class="muted">${escapeHTML(exerciseHelp[ex.name]||'Movimento controllato.')}</p><p class="muted">${escapeHTML(strengthHint(last))}</p></details>
+  <button class="primary guidedAction" id="guidedComplete">${complete?(draft.step===blocks.length-1?'✓ Vai al riepilogo':'Avanti esercizio →'):'✓ Completa serie'}</button>
+  ${done?'<button class="secondary guidedUndo" id="guidedUndo">↶ Annulla ultima serie</button>':''}
+  </div>
+  <div class="card guidedRest"><div class="row"><strong>⏱ Recupero</strong><strong id="guidedRestClock">00:00</strong></div><div class="row"><label for="guidedRestSeconds">Durata</label><select id="guidedRestSeconds">${[45,60,75,90].map(n=>`<option value="${n}" ${draft.rest===n?'selected':''}>${n} sec</option>`).join('')}</select></div><p class="muted" id="guidedRestMessage">Il recupero parte dopo ogni serie.</p><div class="actions"><button class="secondary" id="guidedRestPause">Pausa</button><button class="secondary" id="guidedRestSkip">Salta recupero</button></div></div>
+  <div class="row guidedFooter"><button class="secondary" id="guidedPrevious" ${draft.step===0?'disabled':''}>← Precedente</button><button class="secondary" id="guidedSummary">Riepilogo / Salva →</button></div><p class="note">La sessione viene salvata automaticamente in bozza sul dispositivo.</p>`;
+  const $g=id=>document.getElementById(id);
+  $g('guidedBack').onclick=()=>{stopGuidedTimer();navigate('chooseStrength')};
+  $g('guidedBand').onchange=e=>{ex.band=e.target.value;persist()};
+  $g('guidedRestSeconds').onchange=e=>{draft.rest=Number(e.target.value);persist()};
+  const changeRep=n=>{ex.nextReps=Math.max(0,Math.min(100,(Number(ex.nextReps)||0)+n));$g('guidedRepValue').textContent=ex.nextReps;persist()};
+  $g('guidedMinus').onclick=()=>changeRep(-1);$g('guidedPlus').onclick=()=>changeRep(1);
+  $g('guidedComplete').onclick=()=>{if(complete){if(draft.step===blocks.length-1){summary();return}draft.step++;persist();show();return}ex.reps.push(Number(ex.nextReps)||0);persist();if(ex.reps.length<ex.target){show();beginRest()}else show()};
+  if($g('guidedUndo'))$g('guidedUndo').onclick=()=>{ex.reps.pop();persist();show()};
+  $g('guidedPrevious').onclick=()=>{draft.step=Math.max(0,draft.step-1);persist();show()};
+  $g('guidedSummary').onclick=summary;
+  $g('guidedRestSkip').onclick=()=>{stopGuidedTimer();restRemaining=0;restUntil=0;$g('guidedRestClock').textContent='00:00';$g('guidedRestMessage').textContent='Recupero saltato.'};
+  $g('guidedRestPause').onclick=()=>{if(restUntil){restRemaining=Math.max(0,Math.ceil((restUntil-Date.now())/1000));restUntil=0;restPaused=true;stopGuidedTimer();$g('guidedRestPause').textContent='Riprendi'}else if(restRemaining){beginRest(restRemaining)}};
+ }
+ function beginRest(seconds=draft.rest){
+  stopGuidedTimer();restRemaining=seconds;restUntil=Date.now()+seconds*1000;restPaused=false;
+  const tick=()=>{if(view!=='guidedWorkout'){stopGuidedTimer();return}const clock=document.getElementById('guidedRestClock');if(!clock){stopGuidedTimer();return}restRemaining=Math.max(0,Math.ceil((restUntil-Date.now())/1000));clock.textContent=fmtClock(restRemaining);if(!restRemaining){stopGuidedTimer();restUntil=0;document.getElementById('guidedRestMessage').textContent='Recupero terminato!';try{navigator.vibrate?.([150,100,150])}catch{};try{const C=window.AudioContext||window.webkitAudioContext;if(C){const ctx=new C(),o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);g.gain.value=.04;o.frequency.value=660;o.start();o.stop(ctx.currentTime+.15);o.onended=()=>ctx.close()}}catch{}}};
+  const label=document.getElementById('guidedRestMessage');if(label)label.textContent='Recupera prima della prossima serie.';const pause=document.getElementById('guidedRestPause');if(pause)pause.textContent='Pausa';tick();guidedInterval=setInterval(tick,250);
+ }
+ function summary(){
+  stopGuidedTimer();const completed=draft.exercises.filter(x=>x.reps.length),total=completed.reduce((n,x)=>n+x.reps.length,0);
+  main.innerHTML=`<div class="pageHeading"><span class="eyebrow">FULL BODY ${strengthSelected?'B':'A'}</span><h2>Riepilogo sessione</h2><p>Controlla i risultati prima di registrarli nello storico.</p></div><div class="card"><div class="row"><strong>Esercizi eseguiti</strong><strong>${completed.length} / ${blocks.length}</strong></div><div class="row"><span>Serie completate</span><strong>${total}</strong></div>${completed.map(x=>`<div class="guidedSummaryItem"><strong>${escapeHTML(x.name)}</strong><small>${escapeHTML(x.band)} · ${x.reps.join(' / ')} rip.</small></div>`).join('')}<label for="guidedMinutes">Durata effettiva (minuti, max 30)</label><input id="guidedMinutes" type="number" min="1" max="30" value="${draft.minutes}"><button class="primary" id="guidedSave">✓ Salva allenamento</button><button class="secondary guidedUndo" id="guidedContinue">← Continua allenamento</button></div>`;
+  document.getElementById('guidedContinue').onclick=show;
+  document.getElementById('guidedMinutes').onchange=e=>{draft.minutes=Number(e.target.value);persist()};
+  document.getElementById('guidedSave').onclick=()=>{
+   if(!completed.length){alert('Completa almeno una serie prima di salvare.');return}
+   const minutes=Number(document.getElementById('guidedMinutes').value);if(!Number.isInteger(minutes)||minutes<1||minutes>30){alert('Inserisci una durata tra 1 e 30 minuti.');return}
+   const details=completed.map(x=>({name:x.name,band:x.band,reps:[...x.reps]})),old=[...data.workouts];
+   data.workouts.push({id:String(Date.now()),date:today(),type:'forza',minutes,distance:'',elevation:'',hr:'',effort:5,strengthDetails:details,notes:plan.name+' · '+details.map(x=>x.name+' ('+x.band+': '+x.reps.join('/')+')').join('; ')});
+   if(save()){try{localStorage.removeItem(key)}catch{}navigate('history')}else data.workouts=old;
+  };
+ }
+ persist();show();
+}
 function routine(){
  stopStrengthTimer();
  const plan=strengthPlans[strengthSelected];
@@ -128,5 +193,5 @@ function routine(){
 function settings(){main.innerHTML=`<h2>Impostazioni</h2><div class="card"><h3>Gestione dati</h3><p class="muted">I tuoi allenamenti sono salvati soltanto in questo browser e su questo dispositivo. Esporta periodicamente un backup.</p><button class="primary" id="exportBackup">↓ Esporta backup JSON</button><button class="secondary" id="importBackup" style="width:100%;margin-top:10px">↑ Ripristina backup</button><button class="secondary" id="exportCSV" style="width:100%;margin-top:10px">Esporta allenamenti CSV</button></div><div class="card"><h3>Informazioni</h3><p class="muted">My Training 1.2 · PWA offline · Nessun account richiesto</p></div>`;$('#exportBackup').onclick=()=>download('my-training-backup-'+today()+'.json',JSON.stringify(data,null,2),'application/json');$('#importBackup').onclick=()=>$('#importFile').click();$('#exportCSV').onclick=()=>{let cols=['date','type','minutes','distance','elevation','hr','effort','notes'];let csv=[cols.join(';'),...sorted().map(w=>cols.map(k=>'"'+String(w[k]??'').replace(/"/g,'""')+'"').join(';'))].join('\r\n');download('my-training-'+today()+'.csv','\ufeff'+csv,'text/csv;charset=utf-8')}}
 function download(name,content,type){let url=URL.createObjectURL(new Blob([content],{type})),a=document.createElement('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000)}
 $('#importFile').onchange=async e=>{let f=e.target.files?.[0];if(!f)return;try{let v=JSON.parse(await f.text());if(!Array.isArray(v.workouts)||!Array.isArray(v.goals)||!Array.isArray(v.routine)||v.version!==1)throw Error('Formato backup non compatibile');if(!confirm(`Ripristinare ${v.workouts.length} allenamenti? I dati attuali saranno sostituiti. Esporta prima un backup.`))return;let old=data;data=v;if(save()){alert('Backup ripristinato');navigate('home')}else data=old}catch(err){alert('Impossibile importare: '+err.message)}finally{e.target.value=''}};
-function render(){({home,history,new:form,train,chooseStrength,strengthProgress,calendar,stats,routine,settings}[view]||home)()}
-document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>navigate(b.dataset.view));$('#settingsBtn').onclick=()=>navigate('settings');document.addEventListener('click',e=>{let edit=e.target.closest('[data-edit]');if(edit){editing=edit.dataset.edit;view='new';document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.view==='new'));render();return}let training=e.target.closest('[data-training]');if(training){if(training.dataset.training==='forza')navigate('chooseStrength');else{preferredType=training.dataset.training;navigate('new')}return}let plan=e.target.closest('[data-strength]');if(plan){strengthSelected=Number(plan.dataset.strength);navigate('routine');return}let go=e.target.closest('[data-go]');if(go)navigate(go.dataset.go)});render();if('serviceWorker'in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('./sw.js').catch(()=>{});
+function render(){({home,history,new:form,train,chooseStrength,strengthProgress,guidedWorkout,calendar,stats,routine,settings}[view]||home)()}
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>navigate(b.dataset.view));$('#settingsBtn').onclick=()=>navigate('settings');document.addEventListener('click',e=>{let edit=e.target.closest('[data-edit]');if(edit){editing=edit.dataset.edit;view='new';document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.view==='new'));render();return}let training=e.target.closest('[data-training]');if(training){if(training.dataset.training==='forza')navigate('chooseStrength');else{preferredType=training.dataset.training;navigate('new')}return}let plan=e.target.closest('[data-strength]');if(plan){strengthSelected=Number(plan.dataset.strength);navigate('guidedWorkout');return}let go=e.target.closest('[data-go]');if(go)navigate(go.dataset.go)});render();if('serviceWorker'in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('./sw.js').catch(()=>{});
