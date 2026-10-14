@@ -7,7 +7,7 @@ let cloudSession=null;
 try{cloudSession=JSON.parse(sessionStorage.getItem(CLOUD_SESSION)||'null')}catch{}
 const cloudHeaders=token=>({'apikey':CLOUD_KEY,'Content-Type':'application/json',...(token?{'Authorization':'Bearer '+token}:{})});
 async function cloudRequest(path,{method='GET',body,token}={}){
- const response=await fetch(CLOUD_URL+path,{method,headers:cloudHeaders(token),...(body===undefined?{}:{body:JSON.stringify(body)}),cache:'no-store'});
+ let response;try{response=await fetch(CLOUD_URL+path,{method,headers:cloudHeaders(token),...(body===undefined?{}:{body:JSON.stringify(body)}),cache:'no-store',mode:'cors'});}catch(err){throw Error('Connessione a Supabase non riuscita ('+(navigator.onLine?'rete o blocco Safari':'dispositivo offline')+'). Apri l’app in Safari e riprova. Dettaglio: '+err.message)}
  let result=null;try{result=await response.json()}catch{}
  if(!response.ok)throw Error(result?.msg||result?.error_description||result?.message||('HTTP '+response.status));
  return result;
@@ -32,8 +32,8 @@ function cloudLogout(){cloudStoreSession(null)}
 async function cloudSyncNow(){
  const token=await cloudAccessToken(),userId=cloudSession.user?.id;
  if(!userId)throw Error('Account non identificato');
- const snapshot=JSON.stringify({...data,planned:readPlans()});
- download('my-training-prima-sync-'+today()+'.json',snapshot,'application/json');
+ // On iOS standalone PWAs automatic downloads can interrupt network activity.
+ // Backups remain available via Impostazioni > Esporta backup JSON.
  const remote=await cloudRequest('/rest/v1/training_items?select=item_id,kind,payload&limit=10000',{token});
  if(!Array.isArray(remote))throw Error('Risposta cloud non valida');
  if(remote.length>=10000)throw Error('Limite cloud raggiunto: contatta supporto');
@@ -57,7 +57,7 @@ async function cloudSyncNow(){
 }
 function cloudPanel(){
  const signed=!!cloudSession?.access_token;
- return '<div class="card"><h3>☁ Cloud Sync · PC e iPhone</h3><p class="muted">Sincronizzazione manuale sicura degli allenamenti. I dati restano anche offline; prima di ogni sincronizzazione viene esportato un backup JSON. Per usare il cloud devi prima applicare lo script SQL in Supabase.</p>'+
+ return '<div class="card"><h3>☁ Cloud Sync · PC e iPhone</h3><p class="muted">Sincronizzazione manuale sicura degli allenamenti. I dati restano anche offline; esporta un backup JSON dalle Impostazioni prima della prima sincronizzazione. Per usare il cloud devi prima applicare lo script SQL in Supabase.</p>'+
  (signed?'<p class="note">Connesso: '+escapeHTML(cloudSession.user?.email||'account')+'</p><button class="primary" id="cloudSync">↻ Sincronizza ora</button><button class="secondary" id="cloudLogout" style="width:100%;margin-top:10px">Esci dal cloud</button>':
  '<label>Email<input id="cloudEmail" type="email" autocomplete="email" placeholder="email"></label><label>Password<input id="cloudPassword" type="password" autocomplete="current-password" placeholder="Password"></label><button class="primary" id="cloudLogin">Accedi</button><button class="secondary" id="cloudSignup" style="width:100%;margin-top:10px">Crea account</button>')+
  '<p class="note" id="cloudStatus">La sincronizzazione non elimina attività. Modifiche a una stessa attività su dispositivi diversi richiedono una verifica manuale.</p></div>';
