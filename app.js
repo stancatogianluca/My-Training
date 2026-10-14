@@ -191,7 +191,7 @@ let guidedInterval=null;
 function stopGuidedTimer(){if(guidedInterval){clearInterval(guidedInterval);guidedInterval=null}}
 function guidedWorkout(){
  stopStrengthTimer();stopGuidedTimer();
- const plan=strengthPlans[strengthSelected],blocks=plan.blocks.slice(1),key='my-training-guided-draft-v1';
+ const plan=strengthPlans[strengthSelected],blocks=plan.blocks.slice(1),key='my-training-guided-draft-v1-'+strengthSelected,legacyKey='my-training-guided-draft-v1';
  let draft=null;try{draft=JSON.parse(localStorage.getItem(key)||localStorage.getItem(legacyKey)||'null')}catch{}
  if(!draft||draft.plan!==strengthSelected||!Array.isArray(draft.exercises)||draft.exercises.length!==blocks.length){
   draft={plan:strengthSelected,step:0,minutes:30,rest:60,exercises:blocks.map(b=>{const last=strengthHistory(b[0])[0]?.strengthDetails.find(x=>x.name===b[0]);return {name:b[0],band:last?.band||'Nessuno',reps:[],target:Math.max(1,Math.min(10,last?.reps?.length||b[1])),nextReps:last?.reps?.[0]??8}})};
