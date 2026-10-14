@@ -1,7 +1,7 @@
 'use strict';
 const KEY='my-training-data-v1', $=s=>document.querySelector(s), main=$('#main');
-const types={gravel:['🚴','Gravel'],mtb:['🚵','MTB'],enduro:['⛰️','Enduro'],corsa:['🏃','Corsa'],forza:['🏋️','Corpo Libero'],trekking:['🥾','Trekking']};
-const legacyTypes={rullo:['🚲','Rullo indoor'],camminata:['🚶','Camminata'],nuoto:['🏊','Nuoto']};
+const types={gravel:['🚴','Gravel'],mtb:['🚵','MTB / Enduro'],corsa:['🏃','Corsa'],forza:['🏋️','Corpo Libero'],trekking:['🥾','Trekking']};
+const legacyTypes={enduro:['⛰️','Enduro'],rullo:['🚲','Rullo indoor'],camminata:['🚶','Camminata'],nuoto:['🏊','Nuoto']};
 const allTypes={...types,...legacyTypes};
 const today=()=>{let d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
 const initial=()=>({version:1,workouts:[],goals:[{id:'distance',title:'100 km in una uscita',target:100,unit:'km',type:'distance'},{id:'sessions',title:'3 allenamenti a settimana',target:3,unit:'sessioni',type:'weekly'}],routine:[{name:'Trazioni assistite',sets:4,reps:'8',rest:90},{name:'Rematore TRX',sets:4,reps:'12',rest:60},{name:'Dips parallele',sets:4,reps:'10',rest:90},{name:'Push-up',sets:4,reps:'12',rest:60},{name:'Shoulder press TRX',sets:3,reps:'12',rest:60},{name:'Plank',sets:3,reps:'45 secondi',rest:45}]});
