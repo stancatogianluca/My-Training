@@ -1,0 +1,20 @@
+'use strict';
+// Run: node tests/sync-v2-core.test.js
+const assert = require('node:assert/strict');
+const { planSyncV2 } = require('../sync-v2-core.js');
+const w = (id, minutes=40) => ({id,date:'2026-10-14',type:'gravel',minutes});
+const empty = planSyncV2([],[]);
+assert.deepEqual(empty,{downloads:[],uploads:[],conflicts:[]});
+assert.equal(planSyncV2([w('a')],[]).uploads.length,1);
+assert.equal(planSyncV2([],[w('a')]).downloads.length,1);
+assert.equal(planSyncV2([w('a')],[w('a')]).conflicts.length,0);
+assert.equal(planSyncV2([w('a',40)],[w('a',60)]).conflicts.length,1);
+assert.throws(()=>planSyncV2([w('a'),w('a')],[]),/Duplicate ID/);
+assert.throws(()=>planSyncV2([{date:'2026-10-14'}],[]),/Invalid ID/);
+const local=[w('a')],remote=[w('b')];
+const before=JSON.stringify([local,remote]);
+const result=planSyncV2(local,remote);
+assert.equal(result.uploads.length,1);
+assert.equal(result.downloads.length,1);
+assert.equal(JSON.stringify([local,remote]),before);
+console.log('PASS: sync v2 core, 8 assertions');
