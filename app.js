@@ -252,11 +252,12 @@ function guidedWorkout(){
  const current=()=>draft.exercises[draft.step];
  const bands=['Nessuno','Giallo','Rosso','Nero','Viola','Verde','Blu','Altro'];
  const escapeAttr=v=>escapeHTML(String(v));
+ const readiness=coachState().checkins[today()],lowReadiness=readiness&&(readiness.symptoms==='yes'||readiness.energy<=2||readiness.recovery<=2);
  function show(){
   stopGuidedTimer();
   const ex=current(),block=blocks[draft.step],done=ex.reps.length,complete=done>=ex.target,ins=strengthInsights(ex.name,ex.band),previous=ins.latest,last=previous?.detail;
   main.innerHTML=`<div class="guidedHead"><button class="secondary" id="guidedBack">← Schede</button><span>${escapeHTML(plan.name)}</span><span>ESERCIZIO ${draft.step+1} / ${blocks.length}</span></div>
-  <div class="guidedCard"><div class="guidedTitle"><span class="guidedIcon">🏋️</span><div><h2>${escapeHTML(ex.name)}</h2><p>${escapeHTML(exerciseHelp[ex.name]||'Esegui il movimento in modo controllato.')}</p></div></div>
+  ${lowReadiness?'<div class="mtSafety">Check-in: recupero basso o sintomi segnalati. Valuta riposo o seduta ridotta e segui le indicazioni del team curante.</div>':''}<div class="guidedCard"><div class="guidedTitle"><span class="guidedIcon">🏋️</span><div><h2>${escapeHTML(ex.name)}</h2><p>${escapeHTML(exerciseHelp[ex.name]||'Esegui il movimento in modo controllato.')}</p></div></div>
   <div class="guidedIllustration">${exerciseIllustration(ex.name)}<span>Schema indicativo · consulta le istruzioni per la tecnica</span></div><div class="guidedSegments">${blocks.map((_,i)=>`<span class="${i<draft.step?'done':i===draft.step?'active':''}"></span>`).join('')}</div>
   <div class="guidedStat"><span>SERIE COMPLETATE</span><strong>${done} <small>/ ${ex.target}</small></strong></div>
   <div class="guidedSetDots">${Array.from({length:ex.target},(_,i)=>`<span class="${i<done?'complete':i===done?'now':''}">${i<done?'✓':i+1}</span>`).join('')}</div>
