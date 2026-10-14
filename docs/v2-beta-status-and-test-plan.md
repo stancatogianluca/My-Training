@@ -25,3 +25,10 @@
 8. Verificare in PR diff vs main; merge soltanto dopo accettazione.
 
 **Release gate: BLOCCATO.** Non promuovere a main finché i punti sopra non sono completati.
+
+## Sync engine staging — 2026-10-14
+- Added `sync-v2-core.js` (pure reconciliation prototype, not loaded by the app).
+- Added `tests/sync-v2-core.test.js` for missing, identical, conflicting and duplicate records.
+- This prototype uses JSON serialization for equality: key order can create false conflicts; improve canonicalization before enabling.
+- **Not complete**: server-side compare-and-swap RPC, tombstones, conflict UI, offline queue, token lifecycle, pagination, live device tests and isolated Supabase staging.
+- No production SQL or `main` changes. Do not enable automatic sync until all release gates pass.
