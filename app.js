@@ -126,6 +126,7 @@ const strengthPlans=[
  {name:'Full Body A',focus:'Full Body · trazione, spinta e gambe',blocks:[['Mobilità e riscaldamento',1,'4 min'],['Squat con elastico',2,'10–15 rip.'],['Trazioni assistite con elastico',2,'5–8 rip.'],['Dip assistite / push-up',2,'6–12 rip.'],['Rematore TRX',2,'8–12 rip.'],['Shoulder press con elastico',2,'10–15 rip.']]},
  {name:'Full Body B',focus:'Full Body · gambe, petto, dorso e spalle',blocks:[['Mobilità e riscaldamento',1,'4 min'],['Affondi indietro assistiti TRX',2,'8–12 per gamba'],['Rematore TRX inclinato',2,'10–15 rip.'],['Push-up / dip assistite',2,'8–12 rip.'],['Lat pulldown con elastico',2,'10–15 rip.'],['Alzate laterali con elastico',2,'12–15 rip.']]}
 ];
+strengthPlans.push({name:'Forza C · Full Body',focus:'Venerdì · dorso, petto, spalle e glutei',blocks:[['Mobilità e riscaldamento',1,'4 min'],['Rematore TRX',3,'10 rip.'],['Push-up',3,'10 rip.'],['TRX Y-Raise',2,'12 rip.'],['Ponte glutei',2,'12 rip.'],['Side plank',2,'30 sec per lato']]});
 const DRAFT_KEY='my-training-strength-draft-v12';
 function strengthHistory(name){return data.workouts.filter(w=>w.type==='forza'&&Array.isArray(w.strengthDetails)&&w.strengthDetails.some(x=>x.name===name)).sort((a,b)=>b.date.localeCompare(a.date))}
 function strengthMetrics(detail){const reps=Array.isArray(detail?.reps)?detail.reps.map(Number).filter(n=>Number.isFinite(n)&&n>=0):[];return {reps,total:reps.reduce((a,b)=>a+b,0),best:Math.max(0,...reps),sets:reps.length}}
