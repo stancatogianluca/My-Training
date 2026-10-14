@@ -40,7 +40,26 @@ const strengthPlans=[
 ];
 const DRAFT_KEY='my-training-strength-draft-v12';
 function strengthHistory(name){return data.workouts.filter(w=>w.type==='forza'&&Array.isArray(w.strengthDetails)&&w.strengthDetails.some(x=>x.name===name)).sort((a,b)=>b.date.localeCompare(a.date))}
-function strengthHint(last){if(!last)return 'Prima sessione: scegli una variante che lasci 1–3 ripetizioni di margine.';const total=(last.reps||[]).reduce((a,b)=>a+Number(b||0),0);return 'Ultima volta: '+total+' ripetizioni totali. Prova a migliorare di 1 ripetizione con lo stesso elastico e una buona tecnica.'}
+function strengthMetrics(detail){const reps=Array.isArray(detail?.reps)?detail.reps.map(Number).filter(n=>Number.isFinite(n)&&n>=0):[];return {reps,total:reps.reduce((a,b)=>a+b,0),best:Math.max(0,...reps),sets:reps.length}}
+function strengthInsights(name,band){
+ const history=strengthHistory(name).map(w=>({date:w.date,detail:w.strengthDetails.find(d=>d.name===name)})).filter(x=>x.detail&&Array.isArray(x.detail.reps));
+ const comparable=history.filter(x=>(x.detail.band||'Nessuno')===band),latest=comparable[0],prior=comparable[1];
+ const all=history.map(x=>({...x,...strengthMetrics(x.detail)}));
+ const same=comparable.map(x=>({...x,...strengthMetrics(x.detail)}));
+ const record=Math.max(0,...same.map(x=>x.total)),bestSet=Math.max(0,...same.map(x=>x.best));
+ let message;
+ if(!latest)message='Nessuno storico con questo elastico: registra una prima seduta di riferimento.';
+ else if(!prior)message='Hai una seduta di riferimento. Prova ad aggiungere 1 ripetizione totale, mantenendo tecnica e margine.';
+ else {const now=strengthMetrics(latest.detail),before=strengthMetrics(prior.detail);
+  if(now.sets!==before.sets)message='Numero di serie diverso dalle ultime sedute: confronta le ripetizioni per serie prima di aumentare la difficoltà.';
+  else if(now.total>before.total)message='Progressione positiva: +'+(now.total-before.total)+' ripetizioni rispetto alla seduta precedente con lo stesso elastico.';
+  else if(now.total===before.total)message='Risultato stabile: prova ad aggiungere 1 ripetizione totale solo se l’esecuzione resta pulita.';
+  else message='Ultima seduta sotto la precedente: ripeti il carico senza forzare il recupero.';
+ }
+ return {history,comparable,latest,prior,record,bestSet,message,all,same};
+}
+function strengthHint(last){if(!last)return 'Prima sessione: scegli una variante che lasci 1–3 ripetizioni di margine.';return 'Confronta ripetizioni e serie a parità di elastico e variante, senza sacrificare la tecnica.'}
+
 const exerciseHelp={
 'Squat con elastico':'Gambe e glutei · Ginocchia in linea con i piedi, discesa controllata.',
 'Trazioni assistite con elastico':'Dorso e bicipiti · Elastico fissato bene, scapole attive e niente slanci.',
@@ -53,7 +72,20 @@ const exerciseHelp={
 'Lat pulldown con elastico':'Dorso · Ancoraggio sicuro in alto, gomiti verso i fianchi.',
 'Alzate laterali con elastico':'Spalle · Solleva senza slanci e senza alzare le spalle.'
 };
-function strengthProgress(){const names=[...new Set(strengthPlans.flatMap(p=>p.blocks.slice(1).map(x=>x[0])))];main.innerHTML='<h2>Progressi Corpo Libero</h2><p class="muted">Ripetizioni totali per sessione. Confronta solo sessioni con la stessa resistenza e variante.</p><div class="card"><select id="progressExercise">'+names.map((n,i)=>'<option value="'+i+'">'+escapeHTML(n)+'</option>').join('')+'</select><div id="progressContent"></div></div><button class="secondary" data-go="chooseStrength">← Torna alle schede</button>';function draw(){const name=names[Number($('#progressExercise').value)],history=strengthHistory(name).slice(0,10).reverse(),max=Math.max(1,...history.map(w=>w.strengthDetails.find(x=>x.name===name).reps.reduce((a,b)=>a+Number(b||0),0)));$('#progressContent').innerHTML=history.length?history.map(w=>{const d=w.strengthDetails.find(x=>x.name===name),sum=d.reps.reduce((a,b)=>a+Number(b||0),0);return '<div style="margin:14px 0"><div class="row"><small>'+fmt(w.date)+' · '+escapeHTML(d.band||'Nessuno')+'</small><strong>'+sum+' rip.</strong></div><div class="progress"><div style="width:'+Math.round(sum/max*100)+'%"></div></div><small class="muted">'+d.reps.join(' / ')+' ripetizioni</small></div>'}).join(''):'<p class="muted">Nessuna sessione registrata.</p>'}$('#progressExercise').onchange=draw;draw()}
+function strengthProgress(){
+ const names=[...new Set(strengthPlans.flatMap(p=>p.blocks.slice(1).map(x=>x[0])))];
+ main.innerHTML='<div class="pageHeading"><span class="eyebrow">ANALISI DELLA FORZA</span><h2>Progressione muscolare</h2><p>Record, serie e ripetizioni per esercizio. I confronti usano lo stesso elastico.</p></div><div class="card"><label for="progressExercise">Esercizio</label><select id="progressExercise">'+names.map((n,i)=>'<option value="'+i+'">'+escapeHTML(n)+'</option>').join('')+'</select><label for="progressBand">Elastico da confrontare</label><select id="progressBand"></select><div id="progressContent"></div></div><button class="secondary" data-go="chooseStrength">← Torna alle schede</button>';
+ const exercise=$('#progressExercise'),band=$('#progressBand');
+ function setBands(){const name=names[Number(exercise.value)],history=strengthHistory(name),bands=[...new Set(history.map(w=>w.strengthDetails.find(x=>x.name===name)?.band||'Nessuno'))];band.innerHTML=bands.length?bands.map(b=>'<option value="'+escapeHTML(b)+'">'+escapeHTML(b)+'</option>').join(''):'<option>Nessuno</option>';draw()}
+ function draw(){const name=names[Number(exercise.value)],ins=strengthInsights(name,band.value),sessions=ins.same.slice(0,12).reverse(),max=Math.max(1,...sessions.map(x=>x.total)),last=ins.latest?strengthMetrics(ins.latest.detail):null;
+ $('#progressContent').innerHTML='<div class="insightCard"><strong>💡 Analisi automatica</strong><p>'+escapeHTML(ins.message)+'</p></div>'+
+ '<div class="insightMetrics"><div><small>Record ripetizioni</small><strong>'+ins.record+'</strong></div><div><small>Migliore serie</small><strong>'+ins.bestSet+'</strong></div><div><small>Sedute confrontabili</small><strong>'+ins.same.length+'</strong></div></div>'+
+ (last?'<p class="muted">Ultima seduta: '+fmt(ins.latest.date)+' · '+last.sets+' serie · '+last.reps.join(' / ')+' rip.</p>':'')+
+ (sessions.length?'<h3>Andamento ripetizioni</h3>'+sessions.map(x=>'<div class="insightBarRow"><div class="row"><small>'+fmt(x.date)+'</small><strong>'+x.total+' rip.</strong></div><div class="progress"><div style="width:'+Math.round(x.total/max*100)+'%"></div></div><small class="muted">'+x.reps.join(' / ')+' · '+escapeHTML(band.value)+'</small></div>').join(''):'<p class="muted">Nessun dato registrato per questo elastico.</p>')+
+ '<p class="note">I colori degli elastici non indicano una resistenza universale. Se cambi variante o marca, considera il confronto indicativo.</p>';
+ }
+ exercise.onchange=setBands;band.onchange=draw;setBands();
+}
 let strengthSelected=0;
 let strengthTimer=null;
 function stopStrengthTimer(){if(strengthTimer?.interval)clearInterval(strengthTimer.interval);strengthTimer=null}
