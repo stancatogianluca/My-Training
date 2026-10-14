@@ -146,3 +146,16 @@ details summary{cursor:pointer;font-size:12px;font-weight:700;color:#a9d7ff}
 .guidedSummaryItem{border-top:1px solid #2b4157;padding:12px 0;display:flex;flex-direction:column;gap:4px}
 .guidedSummaryItem small{color:#a7c3df}
 @media(max-width:370px){.guidedHead{font-size:9px}.guidedCounter{gap:18px}.guidedCard{padding:15px 12px}}
+
+/* Smart progression insights */
+.insightCard{margin:14px 0;padding:13px 14px;background:linear-gradient(140deg,#193b4e,#132d41);border:1px solid #346781;border-radius:15px}
+.insightCard strong{font-size:13px;color:#a5e4ff}
+.insightCard p{font-size:12px;line-height:1.55;color:#e0effb;margin:7px 0}
+.insightCard small{font-size:11px;color:#a9c4d8}
+.insightMetrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:15px 0}
+.insightMetrics>div{background:#14283b;border:1px solid #2c4862;border-radius:13px;padding:11px 8px;min-width:0}
+.insightMetrics small{display:block;font-size:10px;color:#a6bed5;min-height:29px}
+.insightMetrics strong{display:block;font-size:23px;margin-top:7px;color:#f2faff}
+.insightBarRow{margin:14px 0}
+.insightBarRow .progress{height:9px;margin:7px 0}
+@media(max-width:370px){.insightMetrics strong{font-size:20px}.insightMetrics>div{padding:9px 6px}}
