@@ -40,3 +40,6 @@ settings=function(){
   if(p.textContent.includes('My Training 1.9.2'))p.textContent=p.textContent.replace('1.9.2','1.9.3');
  });
 };
+
+// Apply the filter immediately, even if the current view was rendered before this script loaded.
+if(typeof navigate==='function')navigate('home');
