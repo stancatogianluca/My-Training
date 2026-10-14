@@ -173,3 +173,22 @@ details summary{cursor:pointer;font-size:12px;font-weight:700;color:#a9d7ff}
 .guidedIllustration span{display:block;color:#92b0c8;font-size:10px;margin-top:6px}
 .guidedLibraryLink{width:100%;margin:8px 0 3px}
 @media(max-width:410px){.libraryCard{grid-template-columns:1fr}.libraryCard .exerciseDiagram{max-width:220px;margin:auto}.libraryText h3{font-size:16px}}
+
+/* Bike Performance */
+.cyclingHero{display:flex;align-items:center;gap:20px;background:radial-gradient(circle at 80% 10%,#1d7092,#12334e 60%,#102337);border:1px solid #2b7896;border-radius:22px;padding:22px;margin-bottom:14px}
+.cyclingHero>span{font-size:44px}
+.cyclingHero small{font-size:10px;letter-spacing:1.2px;color:#9adcf5;font-weight:800;display:block}
+.cyclingHero strong{font-size:30px;letter-spacing:-1px;display:block;margin:6px 0}
+.cyclingHero p{font-size:12px;color:#afcde0;margin:0}
+.cyclingMetrics{margin-bottom:15px}
+.cyclingMetrics .metric{min-height:92px}
+.cyclingMetrics .metric strong{font-size:20px}
+.cyclingBars{height:170px;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:11px;margin:15px 0 5px}
+.cyclingColumn{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0}
+.cyclingColumn small{font-size:10px;color:#b4d4ed;height:15px}
+.cyclingColumn span{font-size:11px;color:#a5bed3}
+.cyclingBarTrack{height:123px;width:100%;background:#10283c;border-radius:9px;display:flex;align-items:flex-end;padding:0 5px}
+.cyclingBarTrack>div{width:100%;min-height:3px;background:linear-gradient(#4bd1d8,#2688d8);border-radius:7px 7px 2px 2px}
+.cyclingPreview{border-top:1px solid #34516a;margin-top:14px;padding-top:5px}
+#cyclingImportFile{font-size:12px;padding:11px}
+@media(max-width:370px){.cyclingHero strong{font-size:25px}.cyclingBars{gap:6px}}
