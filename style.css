@@ -293,3 +293,44 @@ button:focus-visible{outline:2px solid #8ce3ff;outline-offset:3px}
 .app:has(.sportTop) .sportPhotoCredit{font-size:10px;color:#b3c8d9;text-align:center;margin:28px 0 4px;text-shadow:0 1px 6px #000}
 .app:has(.sportTop) .sportPhotoCredit a{color:#a4dbff}
 @media(prefers-reduced-transparency:reduce){.app:has(.sportTop) .sportSpotlight,.app:has(.sportTop) .sportKpi,.app:has(.sportTop) .sportChartPanel,.app:has(.sportTop) .sportActionGrid button,.app:has(.sportTop) .sportRecentBody,.app:has(.sportTop) .sportUpcomingRow{backdrop-filter:none;-webkit-backdrop-filter:none;background:#10263b}}
+
+
+/* My Training 3.0 — compact training-first dashboard, iPhone-safe */
+.mtHero{padding:31px 12px 23px;min-height:172px;text-shadow:0 2px 12px #000c}
+.mtEyebrow{display:block;color:#79d8f3;font-size:10px;font-weight:800;letter-spacing:1.8px}
+.mtHero h2{font-size:clamp(30px,8vw,43px);line-height:1.07;letter-spacing:-1.5px;margin:13px 0 10px;color:#fff}
+.mtHero p{font-size:12px;color:#c4d8e8;margin:0}
+.mtPanel{position:relative;z-index:1;background:rgba(9,26,43,.94);border:1px solid rgba(108,172,217,.29);border-radius:22px;padding:17px;margin:0 0 15px;box-shadow:0 10px 28px #0004;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.mtPanel h2{font-size:18px;margin:0;letter-spacing:-.35px}
+.mtPanelHeader{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:15px}
+.mtPanelHeader small{color:#8ca9c4;font-size:10px;letter-spacing:1.2px;font-weight:800}
+.mtPanelHeader h2{margin-top:6px}.mtPanelHeader h2 span{color:#7694ae;font-size:13px}
+.mtChip{font-size:11px;color:#87dcf4;border:1px solid #2a647e;border-radius:999px;padding:6px 9px;background:#15394c;white-space:nowrap}
+.mtMuted{color:#a9bfd3;font-size:12px;line-height:1.55;margin:10px 0 12px}
+.mtProgress{height:9px;background:#213d54;border-radius:20px;overflow:hidden}
+.mtProgress span{display:block;height:100%;background:linear-gradient(90deg,#257cbe,#65d5ed);border-radius:20px}
+.mtWeekPicker{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin-top:16px}
+.mtWeekPicker button{background:#142d42;border:1px solid #31516c;border-radius:11px;color:#d4e7f4;padding:10px 2px;font-size:13px;font-weight:800;min-width:0}
+.mtWeekPicker button.isCurrent{background:#155e84;border-color:#61cae8;color:#fff}
+.mtWeekPicker small{display:block;font-size:9px;font-weight:500;color:#a7c9dc;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mtToday{background:linear-gradient(145deg,rgba(20,71,105,.97),rgba(11,35,59,.97));border-color:#3689b7}
+.mtToday h2{font-size:23px;line-height:1.2}
+.mtPrimary{display:block;width:100%;padding:15px;border:0;border-radius:13px;background:#35a9e0;color:#fff;font-weight:800;font-size:14px;margin-top:15px;cursor:pointer}
+.mtDayList{display:flex;flex-direction:column;gap:5px}
+.mtDay{width:100%;display:flex;align-items:center;gap:11px;text-align:left;padding:10px 8px;border:1px solid transparent;border-radius:13px;background:transparent;color:#f1f7fc;cursor:pointer}
+.mtDay.isToday{background:#173c55;border-color:#2b729b}
+.mtDayAbbr{flex:0 0 34px;text-align:center;font-weight:800;color:#81d7ed;background:#15354b;border-radius:9px;padding:9px 0}
+.mtDayCopy{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0}
+.mtDayCopy strong{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mtDayCopy small{font-size:10px;color:#98b2c9}
+.mtDayStatus{color:#75d7b8;font-weight:800;font-size:18px;min-width:18px;text-align:center}
+.mtTextAction{border:0;background:transparent;color:#81d9f6;padding:14px 0 0;font-weight:700;font-size:12px}
+.mtMonthBars{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:15px;height:132px;margin:16px 8px}
+.mtMonthCol{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0}
+.mtMonthCol strong,.mtMonthCol small{font-size:11px;color:#bad4e7}
+.mtBar{flex:1;display:flex;align-items:flex-end;width:100%;max-width:42px;background:#1a354a;border-radius:8px;padding:3px}
+.mtBar span{width:100%;background:linear-gradient(#6ad4ec,#267bb9);border-radius:6px}
+.mtShortcuts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:20px}
+.mtShortcuts button{background:#142e44;border:1px solid #31516b;border-radius:14px;padding:16px 10px;text-align:left;color:#e5f4ff;font-size:12px;font-weight:700;min-height:60px}
+@media(max-width:360px){.mtPanel{padding:13px}.mtDay{gap:7px}.mtDayCopy strong{font-size:11px}.mtWeekPicker{gap:4px}}
+@media(prefers-reduced-motion:reduce){.mtPrimary,.mtDay{transition:none}}
