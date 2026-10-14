@@ -11,7 +11,7 @@ const duration=m=>`${Math.floor(m/60)}h ${String(m%60).padStart(2,'0')}m`;
 const currentWeek=()=>{let d=new Date(),day=(d.getDay()+6)%7;d.setHours(12,0,0,0);d.setDate(d.getDate()-day);return d};
 const weekData=()=>{let start=currentWeek();return data.workouts.filter(w=>new Date(w.date+'T12:00:00')>=start)};
 const sorted=()=>[...data.workouts].sort((a,b)=>b.date.localeCompare(a.date));
-function navigate(v){view=v;editing=null;document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===v));render();window.scrollTo(0,0)}
+function navigate(v){if(view==='routine'&&v!=='routine')stopStrengthTimer();view=v;editing=null;document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===v));render();window.scrollTo(0,0)}
 function item(w){let t=types[w.type]||['🏃','Altro'];return `<div class="item"><div class="symbol">${t[0]}</div><div><strong>${escapeHTML(t[1])}</strong><p>${w.distance?Number(w.distance).toLocaleString('it-IT')+' km · ':''}${duration(w.minutes)} · ${fmt(w.date)}</p></div><div class="right"><button class="secondary" data-edit="${escapeHTML(w.id)}" aria-label="Modifica allenamento">Apri ›</button></div></div>`}
 function home(){let w=weekData(),km=w.reduce((s,x)=>s+(Number(x.distance)||0),0),min=w.reduce((s,x)=>s+Number(x.minutes||0),0),start=currentWeek();let days=Array.from({length:7},(_,i)=>{let d=new Date(start);d.setDate(start.getDate()+i);let iso=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');return w.filter(x=>x.date===iso).reduce((s,x)=>s+Number(x.minutes||0),0)}),max=Math.max(30,...days);main.innerHTML=`<div class="hero"><h2>Ogni allenamento conta 💪</h2><p>Registra le attività e segui i tuoi progressi.</p></div><div class="grid"><div class="metric"><small>Allenamenti</small><strong>${w.length}</strong></div><div class="metric"><small>Tempo totale</small><strong>${duration(min)}</strong></div><div class="metric"><small>Distanza</small><strong>${km.toFixed(1)} km</strong></div></div><section class="section card"><h2>Attività della settimana</h2><div class="bar">${days.map((n,i)=>`<div style="height:${Math.max(2,n/max*100)}%"><span>${['Lun','Mar','Mer','Gio','Ven','Sab','Dom'][i]}</span></div>`).join('')}</div><p class="note" style="margin-top:32px">Minuti di allenamento al giorno</p></section><section class="section"><div class="row"><h2>Ultimi allenamenti</h2><button class="secondary" data-go="history">Vedi tutti</button></div><div class="card">${sorted().slice(0,4).map(item).join('')||'<div class="empty">Nessun allenamento ancora registrato.</div>'}</div><button class="primary" data-go="new">＋ Registra allenamento</button></section>`}
 function history(){let a=sorted().filter(w=>historyFilter==='all'||w.type===historyFilter);main.innerHTML=`<h2>Allenamenti</h2><select id="historyFilter" class="filter"><option value="all">Tutte le attività</option>${Object.entries(types).map(([id,t])=>`<option value="${id}" ${historyFilter===id?'selected':''}>${t[1]}</option>`).join('')}</select><div class="card">${a.map(item).join('')||'<div class="empty">Nessun allenamento trovato.</div>'}</div>`;$('#historyFilter').value=historyFilter;$('#historyFilter').onchange=e=>{historyFilter=e.target.value;history()}}
@@ -24,9 +24,44 @@ const strengthPlans=[
  {name:'Full Body C',focus:'Ipertrofia generale',blocks:[['Riscaldamento articolare e mobilità',1,'4 min'],['Squat bulgaro assistito TRX',3,'8–12 per gamba'],['Rematore TRX',3,'10–15 rip.'],['Push-up / dip assistite',3,'8–12 rip.'],['Lat pulldown con elastico',3,'10–15 rip.'],['Estensioni tricipiti TRX',2,'10–15 rip.']]}
 ];
 let strengthSelected=0;
+let strengthTimer=null;
+function stopStrengthTimer(){if(strengthTimer?.interval)clearInterval(strengthTimer.interval);strengthTimer=null}
+function fmtClock(n){n=Math.max(0,Math.ceil(n));return String(Math.floor(n/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0')}
+
 function routine(){
+ stopStrengthTimer();
  const plan=strengthPlans[strengthSelected];
- main.innerHTML=`<h2>Full Body · Ipertrofia</h2><p class="muted">3 schede da massimo 30 minuti, riscaldamento incluso. Alterna A, B e C con almeno un giorno di recupero tra le sedute di forza.</p><div class="row" style="gap:6px">${strengthPlans.map((p,i)=>`<button class="${i===strengthSelected?'primary':'secondary'}" data-plan="${i}" style="flex:1">${p.name.replace('Full Body ','Scheda ')}</button>`).join('')}</div><div class="card"><h3>${plan.name} · ${plan.focus}</h3><p class="muted">4 min riscaldamento · 22 min lavoro · 4 min defaticamento. Alterna gli esercizi in coppie, recuperando 45–75 secondi quando necessario. Mantieni 1–3 ripetizioni di margine.</p>${plan.blocks.map((r,i)=>`<label class="checkrow"><input type="checkbox" class="routineCheck" data-index="${i}"><div><strong>${escapeHTML(r[0])}</strong><p class="muted">${r[1]} serie × ${escapeHTML(r[2])}</p></div></label>`).join('')}<label class="muted" for="strengthMinutes">Durata effettiva (minuti, massimo 30)</label><input id="strengthMinutes" type="number" min="1" max="30" value="30" style="width:100%;margin:8px 0 12px"><button id="saveRoutine" class="primary">Registra ${plan.name}</button></div>`;
+ main.innerHTML=`<h2>Full Body · Ipertrofia</h2><p class="muted">3 schede da massimo 30 minuti, riscaldamento incluso. Alterna A, B e C con almeno un giorno di recupero tra le sedute di forza.</p><div class="row" style="gap:6px">${strengthPlans.map((p,i)=>`<button class="${i===strengthSelected?'primary':'secondary'}" data-plan="${i}" style="flex:1">${p.name.replace('Full Body ','Scheda ')}</button>`).join('')}</div><div class="card"><h3>${plan.name} · ${plan.focus}</h3><p class="muted">4 min riscaldamento · 22 min lavoro · 4 min defaticamento. Alterna gli esercizi in coppie, recuperando 45–75 secondi quando necessario. Mantieni 1–3 ripetizioni di margine.</p>${plan.blocks.map((r,i)=>`<label class="checkrow"><input type="checkbox" class="routineCheck" data-index="${i}"><div><strong>${escapeHTML(r[0])}</strong><p class="muted">${r[1]} serie × ${escapeHTML(r[2])}</p></div></label>`).join('')}<label class="muted" for="strengthMinutes">Durata effettiva (minuti, massimo 30)</label><input id="strengthMinutes" type="number" min="1" max="30" value="30" style="width:100%;margin:8px 0 12px"><div class="card" style="margin:12px 0;background:#10263d"><h3>⏱ Timer guidato · 30 minuti</h3><div id="timerClock" style="font-size:42px;font-weight:800;text-align:center;font-variant-numeric:tabular-nums">30:00</div><p id="timerStage" style="text-align:center">Pronto · riscaldamento</p><p id="timerNext" class="muted" style="text-align:center">Avvia per iniziare</p><div class="actions"><button type="button" id="timerStart" class="primary">▶ Avvia</button><button type="button" id="timerNextBtn" class="secondary">Avanti</button><button type="button" id="timerReset" class="secondary">↺ Reset</button></div></div><button id="saveRoutine" class="primary">Registra ${plan.name}</button></div>`;
+ const stages=[{label:'Riscaldamento',seconds:240},...plan.blocks.slice(1).map(x=>({label:x[0],seconds:240})),{label:'Defaticamento',seconds:360}]; // 4 + 5×4 + 6 = 30 minuti
+ const timer={stage:0,remaining:stages[0].seconds,running:false,interval:null,deadline:0,elapsed:0};
+ strengthTimer=timer;
+ function updateTimer(){
+  if(strengthTimer!==timer)return;
+  $('#timerClock').textContent=fmtClock(timer.remaining);
+  $('#timerStage').textContent=stages[timer.stage]?.label||'Completato';
+  $('#timerNext').textContent=timer.stage<stages.length-1?'Successivo: '+stages[timer.stage+1].label:'Ultima fase';
+  $('#timerStart').textContent=timer.running?'Ⅱ Pausa':'▶ '+(timer.elapsed?'Riprendi':'Avvia');
+ }
+ function advance(){
+  if(timer.stage>=stages.length-1){clearInterval(timer.interval);timer.interval=null;timer.running=false;timer.remaining=0;$('#timerStage').textContent='Allenamento completato';$('#timerClock').textContent='00:00';$('#timerNext').textContent='Puoi registrare la sessione';$('#timerStart').disabled=true;return}
+  timer.stage++;timer.remaining=stages[timer.stage].seconds;
+  if(timer.running)timer.deadline=Date.now()+timer.remaining*1000;
+  updateTimer();
+ }
+ function tick(){
+  if(!timer.running||strengthTimer!==timer)return;
+  timer.remaining=Math.max(0,Math.ceil((timer.deadline-Date.now())/1000));
+  if(timer.remaining===0){advance();return}
+  updateTimer();
+ }
+ $('#timerStart').onclick=()=>{
+  if(timer.running){timer.remaining=Math.max(0,Math.ceil((timer.deadline-Date.now())/1000));timer.running=false;clearInterval(timer.interval);timer.interval=null}
+  else{timer.running=true;timer.elapsed=1;timer.deadline=Date.now()+timer.remaining*1000;timer.interval=setInterval(tick,250)}
+  updateTimer();
+ };
+ $('#timerNextBtn').onclick=advance;
+ $('#timerReset').onclick=()=>{clearInterval(timer.interval);timer.interval=null;timer.running=false;timer.stage=0;timer.remaining=stages[0].seconds;timer.elapsed=0;$('#timerStart').disabled=false;updateTimer()};
+ updateTimer();
  document.querySelectorAll('[data-plan]').forEach(btn=>btn.onclick=()=>{strengthSelected=Number(btn.dataset.plan);routine()});
  $('#saveRoutine').onclick=()=>{
  const completed=[...document.querySelectorAll('.routineCheck:checked')].map(e=>plan.blocks[Number(e.dataset.index)][0]);
