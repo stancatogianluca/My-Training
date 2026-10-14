@@ -192,3 +192,24 @@ details summary{cursor:pointer;font-size:12px;font-weight:700;color:#a9d7ff}
 .cyclingPreview{border-top:1px solid #34516a;margin-top:14px;padding-top:5px}
 #cyclingImportFile{font-size:12px;padding:11px}
 @media(max-width:370px){.cyclingHero strong{font-size:25px}.cyclingBars{gap:6px}}
+
+/* Training Hub 1.4 */
+.trainingScore{margin:16px 0 20px;background:linear-gradient(140deg,#142c45,#102237);border:1px solid #2b5675}
+.trainingScore .row{margin:12px 0 7px}
+.trainingScore .row strong{font-size:12px}
+.trainingScore .progress{margin-bottom:13px}
+.scoreNumber{font-size:33px!important;color:#58c7ff;letter-spacing:-1.5px}
+.scoreNumber small{font-size:13px;color:#9cb9d3;letter-spacing:0}
+.plannerDay{padding:12px 0;border-bottom:1px solid #304258}
+.plannerDay:last-child{border-bottom:0}
+.plannerDay>strong{font-size:13px}
+.plannerDay>small{display:block;margin-top:6px}
+.plannerEntry{gap:8px;margin-top:9px}
+.plannerEntry span{font-size:12px;line-height:1.5;min-width:0;overflow-wrap:anywhere}
+.plannerEntry button{min-width:40px;min-height:40px}
+.achievement{padding:13px 0;border-bottom:1px solid #304258;gap:8px}
+.achievement:last-child{border-bottom:0}
+.achievement span{font-size:13px}
+.achievement strong{font-size:11px;color:#9cd7e8;white-space:nowrap}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #6ed5ff;outline-offset:3px}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
