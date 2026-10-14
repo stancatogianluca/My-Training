@@ -13,7 +13,7 @@ const duration=m=>`${Math.floor(m/60)}h ${String(m%60).padStart(2,'0')}m`;
 const currentWeek=()=>{let d=new Date(),day=(d.getDay()+6)%7;d.setHours(12,0,0,0);d.setDate(d.getDate()-day);return d};
 const weekData=()=>{let start=currentWeek();return data.workouts.filter(w=>new Date(w.date+'T12:00:00')>=start)};
 const sorted=()=>[...data.workouts].sort((a,b)=>b.date.localeCompare(a.date));
-function navigate(v){if(view==='gravelGuide'&&v!=='gravelGuide'){clearInterval(gravelGuideTimer);gravelGuideTimer=null}if(view==='routine'&&v!=='routine')stopStrengthTimer();if(view==='guidedWorkout'&&v!=='guidedWorkout')stopGuidedTimer();view=v;editing=null;document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===v));render();window.scrollTo(0,0)}
+function navigate(v){if(view==='gravelGuide'&&v!=='gravelGuide'){clearInterval(gravelGuideTimer);gravelGuideTimer=null}if(view==='routine'&&v!=='routine')stopStrengthTimer();if(view==='guidedWorkout'&&v!=='guidedWorkout'){stopGuidedTimer();document.body.classList.remove('mtImmersive')}view=v;editing=null;document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===v));render();window.scrollTo(0,0)}
 function item(w){let t=allTypes[w.type]||['🏃','Altro'];return `<div class="item"><div class="symbol">${t[0]}</div><div><strong>${escapeHTML(t[1])}</strong><p>${w.distance?Number(w.distance).toLocaleString('it-IT')+' km · ':''}${duration(w.minutes)} · ${fmt(w.date)}</p></div><div class="right"><button class="secondary" data-edit="${escapeHTML(w.id)}" aria-label="Modifica allenamento">Apri ›</button></div></div>`}
 
 /* Training Hub 1.4: non-destructive optional settings, planning and achievements. */
@@ -286,7 +286,7 @@ function guidedWorkout(){
  function show(){
   stopGuidedTimer();
   const ex=current(),block=blocks[draft.step],done=ex.reps.length,complete=done>=ex.target,ins=strengthInsights(ex.name,ex.band),previous=ins.latest,last=previous?.detail;
-  main.innerHTML=`<div class="guidedHead"><button class="secondary" id="guidedBack">← Schede</button><span>${escapeHTML(plan.name)}</span><span>ESERCIZIO ${draft.step+1} / ${blocks.length}</span></div>
+  main.innerHTML=`<div class="guidedHead"><button class="secondary" id="guidedBack">← Schede</button><span>${escapeHTML(plan.name)}</span><span>ESERCIZIO ${draft.step+1} / ${blocks.length}</span><button class="secondary mtFocusToggle" id="mtFocusToggle" aria-pressed="${document.body.classList.contains('mtImmersive')}">${document.body.classList.contains('mtImmersive')?'↙ Riduci':'⛶ Focus'}</button></div>
   ${lowReadiness?'<div class="mtSafety">Check-in: recupero basso o sintomi segnalati. Valuta riposo o seduta ridotta e segui le indicazioni del team curante.</div>':''}<div class="guidedCard"><div class="guidedTitle"><span class="guidedIcon">🏋️</span><div><h2>${escapeHTML(ex.name)}</h2><p>${escapeHTML(exerciseHelp[ex.name]||'Esegui il movimento in modo controllato.')}</p></div></div>
   <div class="guidedIllustration">${exerciseIllustration(ex.name)}<span>Schema indicativo · consulta le istruzioni per la tecnica</span></div><div class="guidedSegments">${blocks.map((_,i)=>`<span class="${i<draft.step?'done':i===draft.step?'active':''}"></span>`).join('')}</div>
   <div class="guidedStat"><span>SERIE COMPLETATE</span><strong>${done} <small>/ ${ex.target}</small></strong></div>
@@ -301,6 +301,7 @@ function guidedWorkout(){
   <div class="card guidedRest"><div class="row"><strong>⏱ Recupero</strong><strong id="guidedRestClock">00:00</strong></div><div class="row"><label for="guidedRestSeconds">Durata</label><select id="guidedRestSeconds">${[45,60,75,90].map(n=>`<option value="${n}" ${draft.rest===n?'selected':''}>${n} sec</option>`).join('')}</select></div><p class="muted" id="guidedRestMessage">Il recupero parte dopo ogni serie.</p><div class="actions"><button class="secondary" id="guidedRestPause">Pausa</button><button class="secondary" id="guidedRestSkip">Salta recupero</button></div></div>
   <div class="row guidedFooter"><button class="secondary" id="guidedPrevious" ${draft.step===0?'disabled':''}>← Precedente</button><button class="secondary" id="guidedSummary">Riepilogo / Salva →</button></div><p class="note">La sessione viene salvata automaticamente in bozza sul dispositivo.</p>`;
   const $g=id=>document.getElementById(id);
+  $g('mtFocusToggle').onclick=()=>{document.body.classList.toggle('mtImmersive');const on=document.body.classList.contains('mtImmersive');$g('mtFocusToggle').textContent=on?'↙ Riduci':'⛶ Focus';$g('mtFocusToggle').setAttribute('aria-pressed',String(on))};
   $g('guidedBack').onclick=()=>{stopGuidedTimer();navigate('chooseStrength')};
   $g('guidedBand').onchange=e=>{ex.band=e.target.value;persist();const i=strengthInsights(ex.name,ex.band);$g('guidedInsight').textContent=i.message;const meta=document.querySelector('.guidedMeta span:last-child');if(meta)meta.textContent=i.latest?'Ultima: '+i.latest.detail.reps.join(' / ')+' rip.':'Prima registrazione con questo elastico'};
   $g('guidedRestSeconds').onchange=e=>{draft.rest=Number(e.target.value);persist()};
@@ -319,7 +320,7 @@ function guidedWorkout(){
   const label=document.getElementById('guidedRestMessage');if(label)label.textContent='Recupera prima della prossima serie.';const pause=document.getElementById('guidedRestPause');if(pause)pause.textContent='Pausa';tick();guidedInterval=setInterval(tick,250);
  }
  function summary(){
-  stopGuidedTimer();const completed=draft.exercises.filter(x=>x.reps.length),total=completed.reduce((n,x)=>n+x.reps.length,0);
+  document.body.classList.remove('mtImmersive');stopGuidedTimer();const completed=draft.exercises.filter(x=>x.reps.length),total=completed.reduce((n,x)=>n+x.reps.length,0);
   main.innerHTML=`<div class="pageHeading"><span class="eyebrow">${escapeHTML(plan.name)}</span><h2>Riepilogo sessione</h2><p>Controlla i risultati prima di registrarli nello storico.</p></div><div class="card"><div class="row"><strong>Esercizi eseguiti</strong><strong>${completed.length} / ${blocks.length}</strong></div><div class="row"><span>Serie completate</span><strong>${total}</strong></div>${completed.map(x=>`<div class="guidedSummaryItem"><strong>${escapeHTML(x.name)}</strong><small>${escapeHTML(x.band)} · ${x.reps.join(' / ')} rip.</small></div>`).join('')}<label for="guidedMinutes">Durata effettiva (minuti, max 30)</label><input id="guidedMinutes" type="number" min="1" max="30" value="${draft.minutes}"><button class="primary" id="guidedSave">✓ Salva allenamento</button><button class="secondary guidedUndo" id="guidedContinue">← Continua allenamento</button></div>`;
   document.getElementById('guidedContinue').onclick=show;
   document.getElementById('guidedMinutes').onchange=e=>{draft.minutes=Number(e.target.value);persist()};
