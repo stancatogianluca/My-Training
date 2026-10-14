@@ -377,6 +377,7 @@ function gravelPlan(){
  <div class="card"><label for="gravelStart">Inizio programma (lunedì)</label><input type="date" id="gravelStart" value="${start}"><p class="muted">Le attività pianificate non vengono registrate come completate. Cambiare la data non elimina lo storico.</p><button class="secondary" id="gravelSetStart" style="width:100%">Imposta inizio</button></div>
  <div class="card"><h3>Progressione 4 settimane</h3><div class="grid two">${gravelPlanWeeks.map((w,i)=>`<button class="${i===current?'primary':'secondary'}" data-gravel-week="${i}">Settimana ${i+1}<small style="display:block">${w.name}</small></button>`).join('')}</div><div id="gravelWeekDetail"></div></div>
  <div class="card"><h3>La settimana tipo</h3><p class="muted">Spunta solo gli esercizi effettivamente eseguiti. Queste spunte sono personali e non alterano statistiche o backup v1.</p><div id="gravelDays"></div></div>
+ <div class="card"><h3>Al termine del mese</h3><p class="muted">Rivedi chilometri, serie completate e fatica percepita. Se recuperi bene, puoi iniziare un nuovo ciclo; altrimenti ripeti o riduci il carico. Non è previsto un aumento automatico.</p><button class="secondary" id="gravelNextCycle" style="width:100%">↻ Inizia un nuovo ciclo di 4 settimane</button></div>
  <div class="card"><h3>Registrazione e sicurezza</h3><p class="muted">Per registrare davvero una sessione, usa Allenati → Corpo Libero o Gravel. Le spunte qui servono solo da promemoria. Adatta carico, glicemia, idratazione e sodio con il team FC. Non allenarti intensamente con sintomi respiratori peggiorati.</p><button class="primary" data-go="train" style="width:100%">▶ Registra attività</button></div>`;
  let selected=requestedGravelWeek===null?current:requestedGravelWeek;requestedGravelWeek=null;
  function draw(){
@@ -387,6 +388,7 @@ function gravelPlan(){
  main.querySelectorAll('[data-gravel-week]').forEach(el=>el.className=Number(el.dataset.gravelWeek)===selected?'primary':'secondary');
  }
  main.querySelectorAll('[data-gravel-week]').forEach(el=>el.onclick=()=>{selected=Number(el.dataset.gravelWeek);draw()});
+ $('#gravelNextCycle').onclick=()=>{if(!confirm('Iniziare un nuovo ciclo da lunedì prossimo? Le spunte del programma saranno azzerate, ma gli allenamenti registrati nello storico resteranno invariati. Esporta prima un backup se vuoi conservare le spunte.'))return;const next=gravelPlanDate(today(),7-((new Date().getDay()+6)%7));if(gravelPlanSave({start:next,checks:{}}))gravelPlan()};
  $('#gravelSetStart').onclick=()=>{const value=$('#gravelStart').value;if(!/^\d{4}-\d{2}-\d{2}$/.test(value)||new Date(value+'T12:00:00').getDay()!==1){alert('Seleziona un lunedì valido');return}state.start=value;if(gravelPlanSave(state))gravelPlan()};
  draw();
 }
