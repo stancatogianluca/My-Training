@@ -57,3 +57,53 @@ nav button.add{background:#168cf3;color:#fff;border-radius:13px;min-width:68px;p
 .recentPanel{padding-top:4px;padding-bottom:4px}
 @media(max-width:370px){.app{padding-left:12px;padding-right:12px}.premiumHero{padding:18px 15px}.premiumHero h2{font-size:24px}.premiumMetric{padding:11px 7px}.premiumMetric strong{font-size:17px}.metricDetail{font-size:9px}.premiumWeekChart{gap:5px}}
 @media(prefers-reduced-motion:reduce){button:active{transform:none}.premiumProgress>div{transition:none}}
+
+/* Premium visual refresh: typography, rhythm and controls */
+:root{font-family:Inter,-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;--bg:#080f19;--surface:#131f2e;--surface2:#18283b;--line:#293b50;--accent:#329cff;--text:#f4f8ff;--sub:#a1b2c8;letter-spacing:-.01em}
+body{background:#070d16;color:var(--text);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+.app{background:radial-gradient(ellipse 130% 280px at 50% -100px,#173e63 0%,#0b1726 65%,#080f19 100%);max-width:560px}
+header{padding-top:19px}
+header h1{font-size:27px;font-weight:850;letter-spacing:-1.1px}
+header p{font-size:12px;color:#a1b4ca}
+h2{font-weight:800;letter-spacing:-.55px}h3{font-weight:750}
+.card{background:linear-gradient(160deg,#172638,#111d2b);border:1px solid #283c52;border-radius:19px}
+.metric{background:#17283b;border:1px solid #273e56;border-radius:16px}
+.primary{background:linear-gradient(120deg,#168cf3,#398cff);border-radius:13px;box-shadow:0 5px 15px #0b6de32b}
+.secondary{background:#192b40;border-color:#314b65;color:#e1edfc}
+input,select,textarea{background:#111f2e;border:1px solid #35516d;border-radius:12px;min-height:43px}
+input:focus,select:focus,textarea:focus{outline:2px solid #51b4ff;outline-offset:1px}
+label{color:#c3d1e2;font-weight:600}
+.pill{background:#1b3c58;color:#a4d5ff;font-weight:700}
+.pageHeading{padding:6px 2px 19px}
+.pageHeading h2{font-size:28px;letter-spacing:-1.1px;margin:5px 0 7px}
+.pageHeading p{font-size:13px;color:#a3b7cc;margin:0}
+.eyebrow{font-size:10px;letter-spacing:1.8px;color:#6ebdff;font-weight:800}
+.activityList,.planList{display:grid;gap:11px;margin-bottom:20px}
+.activityTile,.planTile{display:flex;align-items:center;gap:14px;width:100%;text-align:left;padding:13px 14px;background:linear-gradient(120deg,#172638,#101d2b);border:1px solid #2b4056;border-radius:18px;color:#f3f8ff;min-height:86px;box-shadow:0 7px 20px #0002}
+.activityIcon,.planIcon{display:grid;place-items:center;width:55px;height:55px;flex-shrink:0;font-size:26px;border-radius:15px;background:linear-gradient(140deg,#216a9e,#16476e)}
+.activity-mtb .activityIcon{background:linear-gradient(135deg,#d75a22,#833b21)}
+.activity-corsa .activityIcon{background:linear-gradient(135deg,#f4496b,#a82153)}
+.activity-forza .activityIcon{background:linear-gradient(135deg,#8655e8,#4d2c9d)}
+.activity-trekking .activityIcon{background:linear-gradient(135deg,#dfa523,#8e6514)}
+.activityCopy,.planTile>span:nth-child(2){display:flex;flex:1;flex-direction:column;gap:5px;min-width:0}
+.activityCopy strong,.planTile strong{font-size:15px;letter-spacing:-.25px}
+.activityCopy small,.planTile small{font-size:11px;color:#a4b7cb;line-height:1.4}
+.activityArrow{font-size:26px;color:#91b2d0;font-weight:300}
+.strengthBanner{border-radius:20px;min-height:132px;padding:23px 19px;display:flex;align-items:center;gap:18px;margin-bottom:18px;background:radial-gradient(circle at 85% 20%,#29466d,#121f31 65%);border:1px solid #345071}
+.strengthBanner>span{font-size:40px}
+.strengthBanner strong{font-size:19px;line-height:1.4;letter-spacing:-.5px}
+.planTile{min-height:102px}
+.planIcon{background:linear-gradient(135deg,#553877,#9b58c7)}
+.planTile:nth-child(2) .planIcon{background:linear-gradient(135deg,#314e95,#6653aa)}
+nav{border-radius:19px 19px 0 0}
+nav button{font-size:22px;font-weight:650}
+nav small{font-size:10px;font-weight:600;letter-spacing:-.1px}
+.premiumHero h2{font-weight:850}
+.sectionTitle h2{font-weight:800}
+.premiumMetric strong{font-weight:850}
+.quickTile{background:linear-gradient(145deg,#182b40,#122032);border-radius:18px}
+.quickTile strong{font-size:13px}
+.checkrow{border-bottom-color:#2b4055}
+details{background:#13283b;border:1px solid #2d4a65;border-radius:12px;padding:10px 12px;margin:9px 0}
+details summary{cursor:pointer;font-size:12px;font-weight:700;color:#a9d7ff}
+@media(max-width:370px){.activityTile,.planTile{gap:10px;padding:11px}.activityIcon,.planIcon{width:48px;height:48px}.strengthBanner strong{font-size:16px}}
