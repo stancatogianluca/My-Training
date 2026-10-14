@@ -101,7 +101,7 @@ function guidedWorkout(){
  const plan=strengthPlans[strengthSelected],blocks=plan.blocks.slice(1),key='my-training-guided-draft-v1';
  let draft=null;try{draft=JSON.parse(localStorage.getItem(key)||'null')}catch{}
  if(!draft||draft.plan!==strengthSelected||!Array.isArray(draft.exercises)||draft.exercises.length!==blocks.length){
-  draft={plan:strengthSelected,step:0,minutes:30,rest:60,exercises:blocks.map(b=>{const last=strengthHistory(b[0])[0]?.strengthDetails.find(x=>x.name===b[0]);return {name:b[0],band:last?.band||'Nessuno',reps:[],target:Math.max(1,Math.min(10,last?.reps?.length||b[1])),nextReps:last?.reps?.[0]||8}})};
+  draft={plan:strengthSelected,step:0,minutes:30,rest:60,exercises:blocks.map(b=>{const last=strengthHistory(b[0])[0]?.strengthDetails.find(x=>x.name===b[0]);return {name:b[0],band:last?.band||'Nessuno',reps:[],target:Math.max(1,Math.min(10,last?.reps?.length||b[1])),nextReps:last?.reps?.[0]??8}})};
  }
  let restUntil=0,restRemaining=0,restPaused=false;
  const persist=()=>{try{localStorage.setItem(key,JSON.stringify(draft))}catch{}};
@@ -110,7 +110,7 @@ function guidedWorkout(){
  const escapeAttr=v=>escapeHTML(String(v));
  function show(){
   stopGuidedTimer();
-  const ex=current(),block=blocks[draft.step],done=ex.reps.length,complete=done>=ex.target,previous=strengthHistory(ex.name)[0],last=previous?.strengthDetails.find(x=>x.name===ex.name);
+  const ex=current(),block=blocks[draft.step],done=ex.reps.length,complete=done>=ex.target,ins=strengthInsights(ex.name,ex.band),previous=ins.latest,last=previous?.detail;
   main.innerHTML=`<div class="guidedHead"><button class="secondary" id="guidedBack">← Schede</button><span>FULL BODY ${strengthSelected?'B':'A'}</span><span>ESERCIZIO ${draft.step+1} / ${blocks.length}</span></div>
   <div class="guidedCard"><div class="guidedTitle"><span class="guidedIcon">🏋️</span><div><h2>${escapeHTML(ex.name)}</h2><p>${escapeHTML(exerciseHelp[ex.name]||'Esegui il movimento in modo controllato.')}</p></div></div>
   <div class="guidedSegments">${blocks.map((_,i)=>`<span class="${i<draft.step?'done':i===draft.step?'active':''}"></span>`).join('')}</div>
@@ -118,7 +118,7 @@ function guidedWorkout(){
   <div class="guidedSetDots">${Array.from({length:ex.target},(_,i)=>`<span class="${i<done?'complete':i===done?'now':''}">${i<done?'✓':i+1}</span>`).join('')}</div>
   <div class="guidedRep"><p>${complete?'Esercizio completato':'Ripetizioni · serie '+(done+1)}</p><div class="guidedCounter"><button type="button" id="guidedMinus" ${complete?'disabled':''}>−</button><strong id="guidedRepValue">${Number(ex.nextReps)||0}</strong><button type="button" id="guidedPlus" ${complete?'disabled':''}>+</button></div></div>
   <label for="guidedBand">Elastico utilizzato</label><select id="guidedBand">${bands.map(b=>`<option ${ex.band===b?'selected':''}>${b}</option>`).join('')}</select>
-  <div class="guidedMeta"><span>Obiettivo: ${escapeHTML(block[2])}</span><span>${last?'Ultima: '+last.reps.join(' / ')+' rip.':'Prima registrazione'}</span></div>
+  <div class="insightCard"><strong>📈 Progressione suggerita</strong><p id="guidedInsight">${escapeHTML(ins.message)}</p>${ins.record?`<small>Record con questo elastico: ${ins.record} rip. totali · migliore serie ${ins.bestSet}</small>`:""}</div><div class="guidedMeta"><span>Obiettivo: ${escapeHTML(block[2])}</span><span>${last?'Ultima: '+last.reps.join(' / ')+' rip.':'Prima registrazione'}</span></div>
   <details><summary>ℹ️ Tecnica e progressione</summary><p class="muted">${escapeHTML(exerciseHelp[ex.name]||'Movimento controllato.')}</p><p class="muted">${escapeHTML(strengthHint(last))}</p></details>
   <button class="primary guidedAction" id="guidedComplete">${complete?(draft.step===blocks.length-1?'✓ Vai al riepilogo':'Avanti esercizio →'):'✓ Completa serie'}</button>
   ${done?'<button class="secondary guidedUndo" id="guidedUndo">↶ Annulla ultima serie</button>':''}
@@ -127,7 +127,7 @@ function guidedWorkout(){
   <div class="row guidedFooter"><button class="secondary" id="guidedPrevious" ${draft.step===0?'disabled':''}>← Precedente</button><button class="secondary" id="guidedSummary">Riepilogo / Salva →</button></div><p class="note">La sessione viene salvata automaticamente in bozza sul dispositivo.</p>`;
   const $g=id=>document.getElementById(id);
   $g('guidedBack').onclick=()=>{stopGuidedTimer();navigate('chooseStrength')};
-  $g('guidedBand').onchange=e=>{ex.band=e.target.value;persist()};
+  $g('guidedBand').onchange=e=>{ex.band=e.target.value;persist();const i=strengthInsights(ex.name,ex.band);$g('guidedInsight').textContent=i.message;const meta=document.querySelector('.guidedMeta span:last-child');if(meta)meta.textContent=i.latest?'Ultima: '+i.latest.detail.reps.join(' / ')+' rip.':'Prima registrazione con questo elastico'};
   $g('guidedRestSeconds').onchange=e=>{draft.rest=Number(e.target.value);persist()};
   const changeRep=n=>{ex.nextReps=Math.max(0,Math.min(100,(Number(ex.nextReps)||0)+n));$g('guidedRepValue').textContent=ex.nextReps;persist()};
   $g('guidedMinus').onclick=()=>changeRep(-1);$g('guidedPlus').onclick=()=>changeRep(1);
