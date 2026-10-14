@@ -159,3 +159,17 @@ details summary{cursor:pointer;font-size:12px;font-weight:700;color:#a9d7ff}
 .insightBarRow{margin:14px 0}
 .insightBarRow .progress{height:9px;margin:7px 0}
 @media(max-width:370px){.insightMetrics strong{font-size:20px}.insightMetrics>div{padding:9px 6px}}
+
+/* Exercise library — compact offline SVG illustrations */
+.libraryList{display:grid;gap:15px;margin:16px 0 22px}
+.libraryCard{display:grid;grid-template-columns:116px minmax(0,1fr);gap:13px;background:linear-gradient(145deg,#192d43,#111e2c);border:1px solid #2d4861;border-radius:19px;padding:13px}
+.exerciseDiagram{display:block;width:100%;height:auto;aspect-ratio:10/9;border-radius:13px}
+.libraryText h3{margin:1px 0 5px;font-size:15px;line-height:1.25}
+.libraryText p{font-size:11px;margin:0 0 8px}
+.libraryText ol{padding-left:17px;margin:8px 0;color:#d3e5f5;font-size:12px;line-height:1.6}
+.libraryText li{margin:0 0 5px}
+.libraryText .libraryCaution{font-size:11px;color:#f5c79e;background:#50351f55;border-radius:8px;padding:8px;margin-top:10px}
+.guidedIllustration{max-width:220px;margin:17px auto 10px;text-align:center}
+.guidedIllustration span{display:block;color:#92b0c8;font-size:10px;margin-top:6px}
+.guidedLibraryLink{width:100%;margin:8px 0 3px}
+@media(max-width:410px){.libraryCard{grid-template-columns:1fr}.libraryCard .exerciseDiagram{max-width:220px;margin:auto}.libraryText h3{font-size:16px}}
