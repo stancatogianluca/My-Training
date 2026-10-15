@@ -294,6 +294,7 @@ function guidedWorkout(){
  }
  let restUntil=0,restRemaining=0,restPaused=false,setStartedAt=0,setElapsed=0,setRunning=false,mode='ready';
  const persist=()=>{try{localStorage.setItem(key,JSON.stringify(draft))}catch{}};
+ const resetWorkout=()=>{if(!confirm('Ricominciare la scheda da zero? Tutte le serie della sessione in corso saranno cancellate. Gli allenamenti già salvati nello storico resteranno invariati.'))return;stopGuidedTimer();stopGuidedSetTimer();setRunning=false;restUntil=0;restRemaining=0;setElapsed=0;mode='ready';draft.step=0;draft.exercises.forEach(ex=>{ex.reps=[];ex.seconds=[]});persist();show()};
  const current=()=>draft.exercises[draft.step];
  const bands=['Nessuno','Giallo','Rosso','Nero','Viola','Verde','Blu','Altro'];
  const escapeAttr=v=>escapeHTML(String(v));
@@ -315,7 +316,7 @@ function guidedWorkout(){
   ${done?'<button class="secondary guidedUndo" id="guidedUndo">↶ Annulla ultima serie</button>':''}
   </div>
   <div class="card guidedRest"><div class="row"><strong>⏱ Recupero</strong><strong id="guidedRestClock">00:00</strong></div><div class="row"><label for="guidedRestSeconds">Durata</label><select id="guidedRestSeconds">${[45,60,75,90].map(n=>`<option value="${n}" ${draft.rest===n?'selected':''}>${n} sec</option>`).join('')}</select></div><p class="muted" id="guidedRestMessage">Il recupero parte dopo ogni serie.</p><div class="actions"><button class="secondary" id="guidedRestPause">Pausa</button><button class="secondary" id="guidedRestSkip">Salta recupero</button></div></div>
-  <div class="row guidedFooter"><button class="secondary" id="guidedPrevious" ${draft.step===0?'disabled':''}>← Precedente</button><button class="secondary" id="guidedSummary">Riepilogo / Salva →</button></div><p class="note">La sessione viene salvata automaticamente in bozza sul dispositivo.</p>`;
+  <div class="row guidedFooter"><button class="secondary" id="guidedReset">↺ Reset scheda</button><button class="secondary" id="guidedPrevious" ${draft.step===0?'disabled':''}>← Precedente</button><button class="secondary" id="guidedSummary">Riepilogo / Salva →</button></div><p class="note">La sessione viene salvata automaticamente in bozza sul dispositivo.</p>`;
   const $g=id=>document.getElementById(id);
   $g('mtFocusToggle').onclick=()=>{document.body.classList.toggle('mtImmersive');const on=document.body.classList.contains('mtImmersive');$g('mtFocusToggle').textContent=on?'↙ Riduci':'⛶ Focus';$g('mtFocusToggle').setAttribute('aria-pressed',String(on))};
   $g('guidedBack').onclick=()=>{stopGuidedTimer();navigate('chooseStrength')};
@@ -334,6 +335,7 @@ function guidedWorkout(){
    setElapsed=0;persist();if(ex.reps.length<ex.target){beginRest()}else if(draft.step<blocks.length-1){draft.step++;persist();beginRest()}else{mode='ready';show()}
   };
   if($g('guidedUndo'))$g('guidedUndo').onclick=()=>{ex.reps.pop();if(Array.isArray(ex.seconds))ex.seconds.pop();persist();show()};
+  $g('guidedReset').onclick=resetWorkout;
   $g('guidedPrevious').onclick=()=>{setRunning=false;stopGuidedSetTimer();draft.step=Math.max(0,draft.step-1);persist();show()};
   $g('guidedSummary').onclick=summary;
   $g('guidedRestSkip').onclick=()=>{stopGuidedTimer();restRemaining=0;restUntil=0;startSet()};
@@ -342,7 +344,8 @@ function guidedWorkout(){
  function renderMinimal(){
   const ex=current(),isRest=mode==='rest'||mode==='paused',clock=isRest?(mode==='paused'?restRemaining:Math.max(0,Math.ceil((restUntil-Date.now())/1000))):setElapsed;
   document.body.classList.add('mtImmersive');
-  main.innerHTML=`<section class="mtLive"><div class="mtLiveTop"><span>${escapeHTML(plan.name)}</span><button type="button" class="secondary" id="mtLiveExit">✕ Esci</button></div><div class="mtLiveCenter"><span class="mtLivePhase">${isRest?(mode==='paused'?'RECUPERO IN PAUSA':'RECUPERO'):'SERIE IN CORSO'}</span><h2>${escapeHTML(ex.name)}</h2><p>Serie ${Math.min(ex.target,ex.reps.length+1)} / ${ex.target}</p><div class="mtLiveClock" id="mtLiveClock">${fmtClock(clock)}</div></div><div class="mtLiveActions">${isRest?'<button type="button" class="primary" id="mtLivePause">'+(mode==='paused'?'▶ Riprendi recupero':'Ⅱ Pausa')+'</button><button type="button" class="secondary" id="mtLiveSkip">Salta recupero</button>':'<button type="button" class="primary" id="mtLiveFinish">■ FINE SERIE</button>'}</div></section>`;
+  main.innerHTML=`<section class="mtLive"><div class="mtLiveTop"><span>${escapeHTML(plan.name)}</span><div class="mtLiveTopActions"><button type="button" class="secondary" id="mtLiveReset">↺ Reset</button><button type="button" class="secondary" id="mtLiveExit">✕ Esci</button></div></div><div class="mtLiveCenter"><span class="mtLivePhase">${isRest?(mode==='paused'?'RECUPERO IN PAUSA':'RECUPERO'):'SERIE IN CORSO'}</span><h2>${escapeHTML(ex.name)}</h2><p>Serie ${Math.min(ex.target,ex.reps.length+1)} / ${ex.target}</p><div class="mtLiveClock" id="mtLiveClock">${fmtClock(clock)}</div></div><div class="mtLiveActions">${isRest?'<button type="button" class="primary" id="mtLivePause">'+(mode==='paused'?'▶ Riprendi recupero':'Ⅱ Pausa')+'</button><button type="button" class="secondary" id="mtLiveSkip">Salta recupero</button>':'<button type="button" class="primary" id="mtLiveFinish">■ FINE SERIE</button>'}</div></section>`;
+  document.getElementById('mtLiveReset').onclick=resetWorkout;
   document.getElementById('mtLiveExit').onclick=()=>{stopGuidedTimer();stopGuidedSetTimer();setRunning=false;restUntil=0;restRemaining=0;mode='ready';show()};
   const finish=document.getElementById('mtLiveFinish');if(finish)finish.onclick=()=>{const ex=current();setElapsed=Math.floor((Date.now()-setStartedAt)/1000);stopGuidedSetTimer();setRunning=false;ex.reps.push(Number(ex.nextReps)||0);if(!Array.isArray(ex.seconds))ex.seconds=[];ex.seconds.push(setElapsed);persist();const finalExercise=ex.reps.length>=ex.target&&draft.step===blocks.length-1;if(ex.reps.length>=ex.target&&!finalExercise){draft.step++;persist()}if(finalExercise){mode='ready';show()}else beginRest()};
   const skip=document.getElementById('mtLiveSkip');if(skip)skip.onclick=()=>{stopGuidedTimer();restUntil=0;restRemaining=0;startSet()};
@@ -359,8 +362,9 @@ function guidedWorkout(){
  }
  function summary(){
   document.body.classList.remove('mtImmersive');stopGuidedTimer();stopGuidedSetTimer();setRunning=false;const completed=draft.exercises.filter(x=>x.reps.length),total=completed.reduce((n,x)=>n+x.reps.length,0);
-  main.innerHTML=`<div class="pageHeading"><span class="eyebrow">${escapeHTML(plan.name)}</span><h2>Riepilogo sessione</h2><p>Controlla i risultati prima di registrarli nello storico.</p></div><div class="card"><div class="row"><strong>Esercizi eseguiti</strong><strong>${completed.length} / ${blocks.length}</strong></div><div class="row"><span>Serie completate</span><strong>${total}</strong></div>${completed.map(x=>`<div class="guidedSummaryItem"><strong>${escapeHTML(x.name)}</strong><small>${escapeHTML(x.band)} · ${x.reps.join(' / ')} rip.</small></div>`).join('')}<label for="guidedMinutes">Durata effettiva (minuti, max 30)</label><input id="guidedMinutes" type="number" min="1" max="30" value="${draft.minutes}"><button class="primary" id="guidedSave">✓ Salva allenamento</button><button class="secondary guidedUndo" id="guidedContinue">← Continua allenamento</button></div>`;
+  main.innerHTML=`<div class="pageHeading"><span class="eyebrow">${escapeHTML(plan.name)}</span><h2>Riepilogo sessione</h2><p>Controlla i risultati prima di registrarli nello storico.</p></div><div class="card"><div class="row"><strong>Esercizi eseguiti</strong><strong>${completed.length} / ${blocks.length}</strong></div><div class="row"><span>Serie completate</span><strong>${total}</strong></div>${completed.map(x=>`<div class="guidedSummaryItem"><strong>${escapeHTML(x.name)}</strong><small>${escapeHTML(x.band)} · ${x.reps.join(' / ')} rip.</small></div>`).join('')}<label for="guidedMinutes">Durata effettiva (minuti, max 30)</label><input id="guidedMinutes" type="number" min="1" max="30" value="${draft.minutes}"><button class="primary" id="guidedSave">✓ Salva allenamento</button><button class="secondary guidedUndo" id="guidedContinue">← Continua allenamento</button><button class="secondary guidedUndo" id="guidedResetSummary">↺ Reset scheda</button></div>`;
   document.getElementById('guidedContinue').onclick=show;
+  document.getElementById('guidedResetSummary').onclick=resetWorkout;
   document.getElementById('guidedMinutes').onchange=e=>{draft.minutes=Number(e.target.value);persist()};
   document.getElementById('guidedSave').onclick=()=>{
    if(!completed.length){alert('Completa almeno una serie prima di salvare.');return}
