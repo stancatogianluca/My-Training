@@ -292,7 +292,7 @@ function guidedWorkout(){
  if(!draft||draft.plan!==strengthSelected||!Array.isArray(draft.exercises)||draft.exercises.length!==blocks.length||draft.exercises.some((ex,i)=>ex.name!==blocks[i][0])){
   draft={plan:strengthSelected,step:0,minutes:30,rest:60,exercises:blocks.map(b=>{const last=strengthHistory(b[0])[0]?.strengthDetails.find(x=>x.name===b[0]);return {name:b[0],band:last?.band||'Nessuno',reps:[],target:Math.max(1,Math.min(10,last?.reps?.length||b[1])),nextReps:last?.reps?.[0]??8}})};
  }
- let restUntil=0,restRemaining=0,restPaused=false,setStartedAt=0,setElapsed=0,setRunning=false;
+ let restUntil=0,restRemaining=0,restPaused=false,setStartedAt=0,setElapsed=0,setRunning=false,mode='ready';
  const persist=()=>{try{localStorage.setItem(key,JSON.stringify(draft))}catch{}};
  const current=()=>draft.exercises[draft.step];
  const bands=['Nessuno','Giallo','Rosso','Nero','Viola','Verde','Blu','Altro'];
@@ -301,6 +301,7 @@ function guidedWorkout(){
  function show(){
   stopGuidedTimer();stopGuidedSetTimer();
   const ex=current(),block=blocks[draft.step],done=ex.reps.length,complete=done>=ex.target,ins=strengthInsights(ex.name,ex.band),previous=ins.latest,last=previous?.detail;
+  document.body.classList.add('mtImmersive');
   main.innerHTML=`<div class="guidedHead"><button class="secondary" id="guidedBack">← Schede</button><span>${escapeHTML(plan.name)}</span><span>ESERCIZIO ${draft.step+1} / ${blocks.length}</span><button class="secondary mtFocusToggle" id="mtFocusToggle" aria-pressed="${document.body.classList.contains('mtImmersive')}">${document.body.classList.contains('mtImmersive')?'↙ Riduci':'⛶ Focus'}</button></div>
   ${lowReadiness?'<div class="mtSafety">Check-in: recupero basso o sintomi segnalati. Valuta riposo o seduta ridotta e segui le indicazioni del team curante.</div>':''}<div class="guidedCard"><div class="guidedTitle"><span class="guidedIcon">🏋️</span><div><h2>${escapeHTML(ex.name)}</h2><p>${escapeHTML(exerciseHelp[ex.name]||'Esegui il movimento in modo controllato.')}</p></div></div>
   <div class="guidedIllustration">${exerciseIllustration(ex.name)}<span>Schema indicativo · consulta le istruzioni per la tecnica</span></div><div class="guidedSegments">${blocks.map((_,i)=>`<span class="${i<draft.step?'done':i===draft.step?'active':''}"></span>`).join('')}</div>
@@ -327,21 +328,34 @@ function guidedWorkout(){
   if(setRunning){action.textContent='■ TERMINA SERIE';tickSet();guidedSetInterval=setInterval(tickSet,250)}
   $g('guidedComplete').onclick=()=>{
    if(complete){if(draft.step===blocks.length-1){summary();return}draft.step++;persist();show();return}
-   if(!setRunning){stopGuidedTimer();restUntil=0;restRemaining=0;setRunning=true;setElapsed=0;setStartedAt=Date.now();action.textContent='■ TERMINA SERIE';tickSet();guidedSetInterval=setInterval(tickSet,250);return}
+   if(!setRunning){startSet();return}
    tickSet();stopGuidedSetTimer();setRunning=false;
    ex.reps.push(Number(ex.nextReps)||0);if(!Array.isArray(ex.seconds))ex.seconds=[];ex.seconds.push(setElapsed);
-   setElapsed=0;persist();if(ex.reps.length<ex.target){show();beginRest()}else show();
+   setElapsed=0;persist();if(ex.reps.length<ex.target){beginRest()}else if(draft.step<blocks.length-1){draft.step++;persist();beginRest()}else{mode='ready';show()}
   };
   if($g('guidedUndo'))$g('guidedUndo').onclick=()=>{ex.reps.pop();if(Array.isArray(ex.seconds))ex.seconds.pop();persist();show()};
   $g('guidedPrevious').onclick=()=>{setRunning=false;stopGuidedSetTimer();draft.step=Math.max(0,draft.step-1);persist();show()};
   $g('guidedSummary').onclick=summary;
-  $g('guidedRestSkip').onclick=()=>{stopGuidedTimer();restRemaining=0;restUntil=0;$g('guidedRestClock').textContent='00:00';$g('guidedRestMessage').textContent='Recupero saltato.'};
-  $g('guidedRestPause').onclick=()=>{if(restUntil){restRemaining=Math.max(0,Math.ceil((restUntil-Date.now())/1000));restUntil=0;restPaused=true;stopGuidedTimer();$g('guidedRestPause').textContent='Riprendi'}else if(restRemaining){beginRest(restRemaining)}};
+  $g('guidedRestSkip').onclick=()=>{stopGuidedTimer();restRemaining=0;restUntil=0;startSet()};
+  $g('guidedRestPause').onclick=()=>{if(restUntil){restRemaining=Math.max(0,Math.ceil((restUntil-Date.now())/1000));restUntil=0;restPaused=true;stopGuidedTimer();mode='paused';renderMinimal()}else if(restRemaining){beginRest(restRemaining)}};
+ }
+ function renderMinimal(){
+  const ex=current(),isRest=mode==='rest'||mode==='paused',clock=isRest?(mode==='paused'?restRemaining:Math.max(0,Math.ceil((restUntil-Date.now())/1000))):setElapsed;
+  document.body.classList.add('mtImmersive');
+  main.innerHTML=`<section class="mtLive"><div class="mtLiveTop"><span>${escapeHTML(plan.name)}</span><button type="button" class="secondary" id="mtLiveExit">✕ Esci</button></div><div class="mtLiveCenter"><span class="mtLivePhase">${isRest?(mode==='paused'?'RECUPERO IN PAUSA':'RECUPERO'):'SERIE IN CORSO'}</span><h2>${escapeHTML(ex.name)}</h2><p>Serie ${Math.min(ex.target,ex.reps.length+1)} / ${ex.target}</p><div class="mtLiveClock" id="mtLiveClock">${fmtClock(clock)}</div></div><div class="mtLiveActions">${isRest?'<button type="button" class="primary" id="mtLivePause">'+(mode==='paused'?'▶ Riprendi recupero':'Ⅱ Pausa')+'</button><button type="button" class="secondary" id="mtLiveSkip">Salta recupero</button>':'<button type="button" class="primary" id="mtLiveFinish">■ FINE SERIE</button>'}</div></section>`;
+  document.getElementById('mtLiveExit').onclick=()=>{stopGuidedTimer();stopGuidedSetTimer();setRunning=false;restUntil=0;restRemaining=0;mode='ready';show()};
+  const finish=document.getElementById('mtLiveFinish');if(finish)finish.onclick=()=>{const ex=current();setElapsed=Math.floor((Date.now()-setStartedAt)/1000);stopGuidedSetTimer();setRunning=false;ex.reps.push(Number(ex.nextReps)||0);if(!Array.isArray(ex.seconds))ex.seconds=[];ex.seconds.push(setElapsed);persist();if(ex.reps.length>=ex.target&&draft.step<blocks.length-1){draft.step++;persist()}if(ex.reps.length>=ex.target&&draft.step===blocks.length-1){mode='ready';show()}else beginRest()};
+  const skip=document.getElementById('mtLiveSkip');if(skip)skip.onclick=()=>{stopGuidedTimer();restUntil=0;restRemaining=0;startSet()};
+  const pause=document.getElementById('mtLivePause');if(pause)pause.onclick=()=>{if(mode==='rest'){restRemaining=Math.max(0,Math.ceil((restUntil-Date.now())/1000));restUntil=0;stopGuidedTimer();mode='paused';renderMinimal()}else if(mode==='paused')beginRest(restRemaining)};
+ }
+ function startSet(){
+  stopGuidedTimer();stopGuidedSetTimer();restUntil=0;restRemaining=0;setRunning=true;setElapsed=0;setStartedAt=Date.now();mode='set';renderMinimal();
+  guidedSetInterval=setInterval(()=>{if(view!=='guidedWorkout'){stopGuidedSetTimer();return}setElapsed=Math.floor((Date.now()-setStartedAt)/1000);const el=document.getElementById('mtLiveClock');if(el)el.textContent=fmtClock(setElapsed)},250);
  }
  function beginRest(seconds=draft.rest){
-  stopGuidedTimer();restRemaining=seconds;restUntil=Date.now()+seconds*1000;restPaused=false;
-  const tick=()=>{if(view!=='guidedWorkout'){stopGuidedTimer();return}const clock=document.getElementById('guidedRestClock');if(!clock){stopGuidedTimer();return}restRemaining=Math.max(0,Math.ceil((restUntil-Date.now())/1000));clock.textContent=fmtClock(restRemaining);if(!restRemaining){stopGuidedTimer();restUntil=0;document.getElementById('guidedRestMessage').textContent='Recupero terminato!';try{navigator.vibrate?.([150,100,150])}catch{};try{const C=window.AudioContext||window.webkitAudioContext;if(C){const ctx=new C(),o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);g.gain.value=.04;o.frequency.value=660;o.start();o.stop(ctx.currentTime+.15);o.onended=()=>ctx.close()}}catch{}}};
-  const label=document.getElementById('guidedRestMessage');if(label)label.textContent='Recupera prima della prossima serie.';const pause=document.getElementById('guidedRestPause');if(pause)pause.textContent='Pausa';tick();guidedInterval=setInterval(tick,250);
+  stopGuidedTimer();stopGuidedSetTimer();setRunning=false;restRemaining=seconds;restUntil=Date.now()+seconds*1000;mode='rest';renderMinimal();
+  const tick=()=>{if(view!=='guidedWorkout'){stopGuidedTimer();return}restRemaining=Math.max(0,Math.ceil((restUntil-Date.now())/1000));const el=document.getElementById('mtLiveClock');if(el)el.textContent=fmtClock(restRemaining);if(!restRemaining){stopGuidedTimer();restUntil=0;try{navigator.vibrate?.([150,100,150])}catch{};startSet()}};
+  tick();if(mode==='rest')guidedInterval=setInterval(tick,250);
  }
  function summary(){
   document.body.classList.remove('mtImmersive');stopGuidedTimer();stopGuidedSetTimer();setRunning=false;const completed=draft.exercises.filter(x=>x.reps.length),total=completed.reduce((n,x)=>n+x.reps.length,0);
