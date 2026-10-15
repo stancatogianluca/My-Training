@@ -296,6 +296,15 @@ function guidedWorkout(){
  const persist=()=>{try{localStorage.setItem(key,JSON.stringify(draft))}catch{}};
  const resetWorkout=()=>{if(!confirm('Ricominciare la scheda da zero? Tutte le serie della sessione in corso saranno cancellate. Gli allenamenti già salvati nello storico resteranno invariati.'))return;stopGuidedTimer();stopGuidedSetTimer();setRunning=false;restUntil=0;restRemaining=0;setElapsed=0;mode='ready';draft.step=0;draft.exercises.forEach(ex=>{ex.reps=[];ex.seconds=[]});persist();show()};
  const current=()=>draft.exercises[draft.step];
+ const undoCurrentSet=()=>{stopGuidedTimer();stopGuidedSetTimer();setRunning=false;restUntil=0;restRemaining=0;setElapsed=0;mode='ready';show()};
+ const undoPreviousSet=()=>{
+  let i=draft.step;
+  if(!draft.exercises[i].reps.length){for(i=draft.step-1;i>=0&&!draft.exercises[i].reps.length;i--);}
+  if(i<0){alert('Non ci sono serie precedenti da annullare.');return}
+  if(!confirm('Annullare l’ultima serie completata e tornare a quella serie?'))return;
+  stopGuidedTimer();stopGuidedSetTimer();setRunning=false;restUntil=0;restRemaining=0;setElapsed=0;mode='ready';
+  const ex=draft.exercises[i];ex.nextReps=ex.reps.pop();if(Array.isArray(ex.seconds))ex.seconds.pop();draft.step=i;persist();show();
+ };
  const bands=['Nessuno','Giallo','Rosso','Nero','Viola','Verde','Blu','Altro'];
  const escapeAttr=v=>escapeHTML(String(v));
  const readiness=coachState().checkins[today()],lowReadiness=readiness&&(readiness.symptoms==='yes'||readiness.energy<=2||readiness.recovery<=2);
@@ -316,7 +325,7 @@ function guidedWorkout(){
   ${done?'<button class="secondary guidedUndo" id="guidedUndo">↶ Annulla ultima serie</button>':''}
   </div>
   <div class="card guidedRest"><div class="row"><strong>⏱ Recupero</strong><strong id="guidedRestClock">00:00</strong></div><div class="row"><label for="guidedRestSeconds">Durata</label><select id="guidedRestSeconds">${[45,60,75,90].map(n=>`<option value="${n}" ${draft.rest===n?'selected':''}>${n} sec</option>`).join('')}</select></div><p class="muted" id="guidedRestMessage">Il recupero parte dopo ogni serie.</p><div class="actions"><button class="secondary" id="guidedRestPause">Pausa</button><button class="secondary" id="guidedRestSkip">Salta recupero</button></div></div>
-  <div class="row guidedFooter"><button class="secondary" id="guidedReset">↺ Reset scheda</button><button class="secondary" id="guidedPrevious" ${draft.step===0?'disabled':''}>← Precedente</button><button class="secondary" id="guidedSummary">Riepilogo / Salva →</button></div><p class="note">La sessione viene salvata automaticamente in bozza sul dispositivo.</p>`;
+  <div class="row guidedFooter"><button class="secondary" id="guidedUndoPrevious">↶ Serie precedente</button><button class="secondary" id="guidedReset">↺ Reset scheda</button><button class="secondary" id="guidedPrevious" ${draft.step===0?'disabled':''}>← Precedente</button><button class="secondary" id="guidedSummary">Riepilogo / Salva →</button></div><p class="note">La sessione viene salvata automaticamente in bozza sul dispositivo.</p>`;
   const $g=id=>document.getElementById(id);
   $g('mtFocusToggle').onclick=()=>{document.body.classList.toggle('mtImmersive');const on=document.body.classList.contains('mtImmersive');$g('mtFocusToggle').textContent=on?'↙ Riduci':'⛶ Focus';$g('mtFocusToggle').setAttribute('aria-pressed',String(on))};
   $g('guidedBack').onclick=()=>{stopGuidedTimer();navigate('chooseStrength')};
@@ -336,6 +345,7 @@ function guidedWorkout(){
   };
   if($g('guidedUndo'))$g('guidedUndo').onclick=()=>{ex.reps.pop();if(Array.isArray(ex.seconds))ex.seconds.pop();persist();show()};
   $g('guidedReset').onclick=resetWorkout;
+  $g('guidedUndoPrevious').onclick=undoPreviousSet;
   $g('guidedPrevious').onclick=()=>{setRunning=false;stopGuidedSetTimer();draft.step=Math.max(0,draft.step-1);persist();show()};
   $g('guidedSummary').onclick=summary;
   $g('guidedRestSkip').onclick=()=>{stopGuidedTimer();restRemaining=0;restUntil=0;startSet()};
@@ -344,7 +354,8 @@ function guidedWorkout(){
  function renderMinimal(){
   const ex=current(),isRest=mode==='rest'||mode==='paused',clock=isRest?(mode==='paused'?restRemaining:Math.max(0,Math.ceil((restUntil-Date.now())/1000))):setElapsed;
   document.body.classList.add('mtImmersive');
-  main.innerHTML=`<section class="mtLive"><div class="mtLiveTop"><span>${escapeHTML(plan.name)}</span><div class="mtLiveTopActions"><button type="button" class="secondary" id="mtLiveReset">↺ Reset</button><button type="button" class="secondary" id="mtLiveExit">✕ Esci</button></div></div><div class="mtLiveCenter"><span class="mtLivePhase">${isRest?(mode==='paused'?'RECUPERO IN PAUSA':'RECUPERO'):'SERIE IN CORSO'}</span><h2>${escapeHTML(ex.name)}</h2><p>Serie ${Math.min(ex.target,ex.reps.length+1)} / ${ex.target}</p><div class="mtLiveClock" id="mtLiveClock">${fmtClock(clock)}</div></div><div class="mtLiveActions">${isRest?'<button type="button" class="primary" id="mtLivePause">'+(mode==='paused'?'▶ Riprendi recupero':'Ⅱ Pausa')+'</button><button type="button" class="secondary" id="mtLiveSkip">Salta recupero</button>':'<button type="button" class="primary" id="mtLiveFinish">■ FINE SERIE</button>'}</div></section>`;
+  main.innerHTML=`<section class="mtLive"><div class="mtLiveTop"><span>${escapeHTML(plan.name)}</span><div class="mtLiveTopActions"><button type="button" class="secondary" id="mtLiveUndo">↶ Indietro</button><button type="button" class="secondary" id="mtLiveReset">↺ Reset</button><button type="button" class="secondary" id="mtLiveExit">✕ Esci</button></div></div><div class="mtLiveCenter"><span class="mtLivePhase">${isRest?(mode==='paused'?'RECUPERO IN PAUSA':'RECUPERO'):'SERIE IN CORSO'}</span><h2>${escapeHTML(ex.name)}</h2><p>Serie ${Math.min(ex.target,ex.reps.length+1)} / ${ex.target}</p><div class="mtLiveClock" id="mtLiveClock">${fmtClock(clock)}</div></div><div class="mtLiveActions">${isRest?'<button type="button" class="primary" id="mtLivePause">'+(mode==='paused'?'▶ Riprendi recupero':'Ⅱ Pausa')+'</button><button type="button" class="secondary" id="mtLiveSkip">Salta recupero</button>':'<button type="button" class="primary" id="mtLiveFinish">■ FINE SERIE</button>'}</div></section>`;
+  document.getElementById('mtLiveUndo').onclick=()=>{if(mode==='set')undoCurrentSet();else undoPreviousSet()};
   document.getElementById('mtLiveReset').onclick=resetWorkout;
   document.getElementById('mtLiveExit').onclick=()=>{stopGuidedTimer();stopGuidedSetTimer();setRunning=false;restUntil=0;restRemaining=0;mode='ready';show()};
   const finish=document.getElementById('mtLiveFinish');if(finish)finish.onclick=()=>{const ex=current();setElapsed=Math.floor((Date.now()-setStartedAt)/1000);stopGuidedSetTimer();setRunning=false;ex.reps.push(Number(ex.nextReps)||0);if(!Array.isArray(ex.seconds))ex.seconds=[];ex.seconds.push(setElapsed);persist();const finalExercise=ex.reps.length>=ex.target&&draft.step===blocks.length-1;if(ex.reps.length>=ex.target&&!finalExercise){draft.step++;persist()}if(finalExercise){mode='ready';show()}else beginRest()};
