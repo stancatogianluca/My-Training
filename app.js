@@ -282,7 +282,13 @@ function fmtClock(n){n=Math.max(0,Math.ceil(n));return String(Math.floor(n/60)).
 function train(){main.innerHTML=`<div class="pageHeading"><span class="eyebrow">SCEGLI LA TUA ATTIVITÀ</span><h2>Allenati</h2><p>Registra un'uscita o apri la tua scheda Full Body.</p></div><button class="secondary" data-go="cyclingDashboard" style="width:100%;margin-bottom:15px">🚴 Bike Performance · Statistiche e importazione →</button><div class="activityList">${Object.entries(types).map(([id,t])=>`<button class="activityTile activity-${id}" data-training="${id}"><span class="activityIcon">${t[0]}</span><span class="activityCopy"><strong>${escapeHTML(t[1])}</strong><small>${id==='forza'?'Schede A/B/C · 30 minuti':'Registra la tua attività'}</small></span><span class="activityArrow">›</span></button>`).join('')}</div>`}
 function chooseStrength(){main.innerHTML=`<div class="pageHeading"><span class="eyebrow">FORZA E IPERTROFIA</span><h2>Corpo Libero</h2><p>Tre schede A/B/C da circa 30 minuti.</p></div><div class="strengthBanner"><span>🏋️</span><strong>Tre sedute a settimana.<br>Un corpo più forte.</strong></div><div class="planList">${strengthPlans.map((p,i)=>`<button class="planTile" data-strength="${i}"><span class="planIcon">${i===2?'⚡':'🏋️'}</span><span><strong>${p.name}</strong><small>${escapeHTML(p.focus)}</small><small>◷ 30 minuti · 5 esercizi</small></span><span class="activityArrow">›</span></button>`).join('')}</div><button class="secondary" data-go="routine" style="width:100%;margin-bottom:14px">Compilazione classica della scheda</button><div class="quickGrid"><button class="quickTile" data-go="strengthProgress"><span>📈</span><strong>Libreria esercizi</strong><small>Illustrazioni e tecnica</small></button><button class="quickTile" data-go="strengthProgress"><span>📈</span><strong>I miei progressi</strong><small>Grafici e storico</small></button></div>`}
 
-let guidedInterval=null,guidedSetInterval=null;
+let guidedInterval=null,guidedSetInterval=null,guidedAudio=null;
+function unlockGuidedAudio(){
+ try{const C=window.AudioContext||window.webkitAudioContext;if(!C)return;if(!guidedAudio)guidedAudio=new C();if(guidedAudio.state==='suspended')guidedAudio.resume().catch(()=>{});}catch{}
+}
+function guidedBeep(freq=800,duration=.13){
+ try{if(!guidedAudio||guidedAudio.state!=='running')return;const o=guidedAudio.createOscillator(),g=guidedAudio.createGain(),t=guidedAudio.currentTime;o.type='sine';o.frequency.setValueAtTime(freq,t);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.16,t+.015);g.gain.exponentialRampToValueAtTime(.0001,t+duration);o.connect(g);g.connect(guidedAudio.destination);o.start(t);o.stop(t+duration+.02)}catch{}
+}
 function stopGuidedSetTimer(){if(guidedSetInterval){clearInterval(guidedSetInterval);guidedSetInterval=null}}
 function stopGuidedTimer(){if(guidedInterval){clearInterval(guidedInterval);guidedInterval=null}}
 function guidedWorkout(){
@@ -358,17 +364,19 @@ function guidedWorkout(){
   document.getElementById('mtLiveUndo').onclick=()=>{if(mode==='set')undoCurrentSet();else undoPreviousSet()};
   document.getElementById('mtLiveReset').onclick=resetWorkout;
   document.getElementById('mtLiveExit').onclick=()=>{stopGuidedTimer();stopGuidedSetTimer();setRunning=false;restUntil=0;restRemaining=0;mode='ready';show()};
-  const finish=document.getElementById('mtLiveFinish');if(finish)finish.onclick=()=>{const ex=current();setElapsed=Math.floor((Date.now()-setStartedAt)/1000);stopGuidedSetTimer();setRunning=false;ex.reps.push(Number(ex.nextReps)||0);if(!Array.isArray(ex.seconds))ex.seconds=[];ex.seconds.push(setElapsed);persist();const finalExercise=ex.reps.length>=ex.target&&draft.step===blocks.length-1;if(ex.reps.length>=ex.target&&!finalExercise){draft.step++;persist()}if(finalExercise){mode='ready';show()}else beginRest()};
-  const skip=document.getElementById('mtLiveSkip');if(skip)skip.onclick=()=>{stopGuidedTimer();restUntil=0;restRemaining=0;startSet()};
-  const pause=document.getElementById('mtLivePause');if(pause)pause.onclick=()=>{if(mode==='rest'){restRemaining=Math.max(0,Math.ceil((restUntil-Date.now())/1000));restUntil=0;stopGuidedTimer();mode='paused';renderMinimal()}else if(mode==='paused')beginRest(restRemaining)};
+  const finish=document.getElementById('mtLiveFinish');if(finish)finish.onclick=()=>{unlockGuidedAudio();guidedBeep(580,.16);const ex=current();setElapsed=Math.floor((Date.now()-setStartedAt)/1000);stopGuidedSetTimer();setRunning=false;ex.reps.push(Number(ex.nextReps)||0);if(!Array.isArray(ex.seconds))ex.seconds=[];ex.seconds.push(setElapsed);persist();const finalExercise=ex.reps.length>=ex.target&&draft.step===blocks.length-1;if(ex.reps.length>=ex.target&&!finalExercise){draft.step++;persist()}if(finalExercise){mode='ready';show()}else beginRest()};
+  const skip=document.getElementById('mtLiveSkip');if(skip)skip.onclick=()=>{unlockGuidedAudio();stopGuidedTimer();restUntil=0;restRemaining=0;startSet()};
+  const pause=document.getElementById('mtLivePause');if(pause)pause.onclick=()=>{unlockGuidedAudio();if(mode==='rest'){restRemaining=Math.max(0,Math.ceil((restUntil-Date.now())/1000));restUntil=0;stopGuidedTimer();mode='paused';renderMinimal()}else if(mode==='paused')beginRest(restRemaining)};
  }
  function startSet(){
+  unlockGuidedAudio();guidedBeep(940,.18);
   stopGuidedTimer();stopGuidedSetTimer();restUntil=0;restRemaining=0;setRunning=true;setElapsed=0;setStartedAt=Date.now();mode='set';renderMinimal();
   guidedSetInterval=setInterval(()=>{if(view!=='guidedWorkout'){stopGuidedSetTimer();return}setElapsed=Math.floor((Date.now()-setStartedAt)/1000);const el=document.getElementById('mtLiveClock');if(el)el.textContent=fmtClock(setElapsed)},250);
  }
  function beginRest(seconds=draft.rest){
+  let lastBeepSecond=-1;
   stopGuidedTimer();stopGuidedSetTimer();setRunning=false;restRemaining=seconds;restUntil=Date.now()+seconds*1000;mode='rest';renderMinimal();
-  const tick=()=>{if(view!=='guidedWorkout'){stopGuidedTimer();return}restRemaining=Math.max(0,Math.ceil((restUntil-Date.now())/1000));const el=document.getElementById('mtLiveClock');if(el)el.textContent=fmtClock(restRemaining);if(!restRemaining){stopGuidedTimer();restUntil=0;try{navigator.vibrate?.([150,100,150])}catch{};startSet()}};
+  const tick=()=>{if(view!=='guidedWorkout'){stopGuidedTimer();return}restRemaining=Math.max(0,Math.ceil((restUntil-Date.now())/1000));const el=document.getElementById('mtLiveClock');if(el)el.textContent=fmtClock(restRemaining);if(restRemaining>0&&restRemaining<=3&&lastBeepSecond!==restRemaining){lastBeepSecond=restRemaining;guidedBeep(700,.11)}if(!restRemaining){stopGuidedTimer();restUntil=0;guidedBeep(1050,.26);try{navigator.vibrate?.([150,100,150])}catch{};startSet()}};
   tick();if(mode==='rest')guidedInterval=setInterval(tick,250);
  }
  function summary(){
