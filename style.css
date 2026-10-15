@@ -381,3 +381,6 @@ body.mtImmersive .guidedCounter button{min-width:58px;min-height:58px}
 @media(max-width:360px){.mtReportMetric{padding:12px}.mtReportMetric strong{font-size:21px}.mtFocusToggle{font-size:10px!important}}
 
 .mtSwapPanel{border-color:#36799c}.mtSwapPanel label{display:block;margin:12px 0 6px;color:#c9e2f1;font-size:12px}.mtSwapPanel select{display:block;width:100%;min-height:44px}.mtSwapPreview{background:#123349;border:1px solid #355e78;border-radius:12px;padding:13px;color:#d9f0fb;font-size:12px;line-height:1.9;margin:14px 0}.mtSwapWarning{color:#ffd28d;line-height:1.5}.mtSwapPreview strong{color:#77d6ee}
+
+.guidedSetTimer{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 16px;margin:14px 0 10px;border:1px solid #356a88;border-radius:14px;background:#102d43;color:#c9e2f1}
+.guidedSetTimer strong{font-size:30px;font-weight:800;font-variant-numeric:tabular-nums;color:#fff}
