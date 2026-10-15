@@ -390,3 +390,5 @@ body.mtImmersive .guidedCounter button{min-width:58px;min-height:58px}
 .mtLiveTopActions{display:flex;align-items:center;gap:8px}.mtLiveTopActions button{font-size:12px;padding:9px 11px}.guidedFooter{flex-wrap:wrap}
 
 .mtLiveTopActions{flex-wrap:wrap;justify-content:flex-end}.mtLiveTopActions button{white-space:nowrap}
+
+.mtCompleted{border:1px solid rgba(74,222,128,.35)}.mtCompleted h2{font-size:1.08rem}.mtCompleted .mtChip{color:#86efac}
