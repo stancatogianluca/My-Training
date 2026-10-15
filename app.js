@@ -300,7 +300,7 @@ function guidedWorkout(){
  }
  let restUntil=0,restRemaining=0,restPaused=false,setStartedAt=0,setElapsed=0,setRunning=false,mode='ready';
  const persist=()=>{try{localStorage.setItem(key,JSON.stringify(draft))}catch{}};
- const resetWorkout=()=>{if(!confirm('Ricominciare la scheda da zero? Tutte le serie della sessione in corso saranno cancellate. Gli allenamenti già salvati nello storico resteranno invariati.'))return;stopGuidedTimer();stopGuidedSetTimer();setRunning=false;restUntil=0;restRemaining=0;setElapsed=0;mode='ready';draft.step=0;draft.exercises.forEach(ex=>{ex.reps=[];ex.seconds=[]});persist();show()};
+ const resetWorkout=()=>{if(!confirm('Ricominciare la scheda da zero? Tutte le serie della sessione in corso saranno cancellate. Gli allenamenti già salvati nello storico resteranno invariati.'))return;stopGuidedTimer();stopGuidedSetTimer();setRunning=false;restUntil=0;restRemaining=0;setElapsed=0;mode='ready';draft.step=0;draft.startedAt=null;draft.finishedAt=null;draft.minutes=0;draft.exercises.forEach(ex=>{ex.reps=[];ex.seconds=[]});persist();show()};
  const current=()=>draft.exercises[draft.step];
  const undoCurrentSet=()=>{stopGuidedTimer();stopGuidedSetTimer();setRunning=false;restUntil=0;restRemaining=0;setElapsed=0;mode='ready';show()};
  const undoPreviousSet=()=>{
@@ -370,6 +370,7 @@ function guidedWorkout(){
  }
  function startSet(){
   unlockGuidedAudio();guidedBeep(940,.18);
+  if(!draft.startedAt||!Number.isFinite(Number(draft.startedAt))){draft.startedAt=Date.now();persist()}draft.finishedAt=null;
   stopGuidedTimer();stopGuidedSetTimer();restUntil=0;restRemaining=0;setRunning=true;setElapsed=0;setStartedAt=Date.now();mode='set';renderMinimal();
   guidedSetInterval=setInterval(()=>{if(view!=='guidedWorkout'){stopGuidedSetTimer();return}setElapsed=Math.floor((Date.now()-setStartedAt)/1000);const el=document.getElementById('mtLiveClock');if(el)el.textContent=fmtClock(setElapsed)},250);
  }
@@ -380,14 +381,15 @@ function guidedWorkout(){
   tick();if(mode==='rest')guidedInterval=setInterval(tick,250);
  }
  function summary(){
+  if(draft.startedAt&&!draft.finishedAt){draft.finishedAt=Date.now();draft.minutes=Math.max(1,Math.ceil((draft.finishedAt-Number(draft.startedAt))/60000));persist()}
   document.body.classList.remove('mtImmersive');stopGuidedTimer();stopGuidedSetTimer();setRunning=false;const completed=draft.exercises.filter(x=>x.reps.length),total=completed.reduce((n,x)=>n+x.reps.length,0);
-  main.innerHTML=`<div class="pageHeading"><span class="eyebrow">${escapeHTML(plan.name)}</span><h2>Riepilogo sessione</h2><p>Controlla i risultati prima di registrarli nello storico.</p></div><div class="card"><div class="row"><strong>Esercizi eseguiti</strong><strong>${completed.length} / ${blocks.length}</strong></div><div class="row"><span>Serie completate</span><strong>${total}</strong></div>${completed.map(x=>`<div class="guidedSummaryItem"><strong>${escapeHTML(x.name)}</strong><small>${escapeHTML(x.band)} · ${x.reps.join(' / ')} rip.</small></div>`).join('')}<label for="guidedMinutes">Durata effettiva (minuti, max 30)</label><input id="guidedMinutes" type="number" min="1" max="30" value="${draft.minutes}"><button class="primary" id="guidedSave">✓ Salva allenamento</button><button class="secondary guidedUndo" id="guidedContinue">← Continua allenamento</button><button class="secondary guidedUndo" id="guidedResetSummary">↺ Reset scheda</button></div>`;
-  document.getElementById('guidedContinue').onclick=show;
+  main.innerHTML=`<div class="pageHeading"><span class="eyebrow">${escapeHTML(plan.name)}</span><h2>Riepilogo sessione</h2><p>Controlla i risultati prima di registrarli nello storico.</p></div><div class="card"><div class="row"><strong>Esercizi eseguiti</strong><strong>${completed.length} / ${blocks.length}</strong></div><div class="row"><span>Serie completate</span><strong>${total}</strong></div>${completed.map(x=>`<div class="guidedSummaryItem"><strong>${escapeHTML(x.name)}</strong><small>${escapeHTML(x.band)} · ${x.reps.join(' / ')} rip.</small></div>`).join('')}<label for="guidedMinutes">Durata effettiva (minuti)</label><input id="guidedMinutes" type="number" min="1" value="${draft.minutes||30}"><button class="primary" id="guidedSave">✓ Salva allenamento</button><button class="secondary guidedUndo" id="guidedContinue">← Continua allenamento</button><button class="secondary guidedUndo" id="guidedResetSummary">↺ Reset scheda</button></div>`;
+  document.getElementById('guidedContinue').onclick=()=>{draft.finishedAt=null;persist();show()};
   document.getElementById('guidedResetSummary').onclick=resetWorkout;
   document.getElementById('guidedMinutes').onchange=e=>{draft.minutes=Number(e.target.value);persist()};
   document.getElementById('guidedSave').onclick=()=>{
    if(!completed.length){alert('Completa almeno una serie prima di salvare.');return}
-   const minutes=Number(document.getElementById('guidedMinutes').value);if(!Number.isInteger(minutes)||minutes<1||minutes>30){alert('Inserisci una durata tra 1 e 30 minuti.');return}
+   const minutes=Number(document.getElementById('guidedMinutes').value);if(!Number.isInteger(minutes)||minutes<1||minutes>1440){alert('Inserisci una durata valida tra 1 e 1440 minuti.');return}
    const details=completed.map(x=>({name:x.name,band:x.band,reps:[...x.reps]})),old=[...data.workouts];
    data.workouts.push({id:String(Date.now()),date:today(),type:'forza',minutes,distance:'',elevation:'',hr:'',effort:5,strengthDetails:details,notes:plan.name+' · '+details.map(x=>x.name+' ('+x.band+': '+x.reps.join('/')+')').join('; ')});
    if(save()){try{localStorage.removeItem(key);localStorage.removeItem(legacyKey)}catch{}navigate('history')}else data.workouts=old;
